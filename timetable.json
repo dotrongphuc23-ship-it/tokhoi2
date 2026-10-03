@@ -1,0 +1,34 @@
+[
+  {
+    "classId": "1A",
+    "schedule": [
+      {
+        "period": "Tiết 1",
+        "time": "07:30 - 08:05",
+        "t2": "Chào cờ",
+        "t3": "Toán",
+        "t4": "Tiếng Việt",
+        "t5": "Toán",
+        "t6": "Tiếng Anh"
+      },
+      {
+        "period": "Tiết 2",
+        "time": "08:15 - 08:50",
+        "t2": "Tiếng Việt",
+        "t3": "Toán",
+        "t4": "Tập viết",
+        "t5": "TN & XH",
+        "t6": "Tiếng Việt"
+      },
+      {
+        "period": "Tiết 3",
+        "time": "09:20 - 09:55",
+        "t2": "Đạo đức",
+        "t3": "Mỹ thuật",
+        "t4": "Toán",
+        "t5": "Tiếng Việt",
+        "t6": "Âm nhạc"
+      }
+    ]
+  }
+]

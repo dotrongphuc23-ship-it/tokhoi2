@@ -1,0 +1,13 @@
+:root { --primary: #1a535c; --accent: #ffe66d; --teal: #4ecdc4; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f8fafc; }
+
+/* Trang đăng nhập / đăng ký / quên mật khẩu dùng chung một bố cục */
+.auth-body { background: #eef2f7; min-height: 100vh; display: flex; align-items: center; }
+.auth-card { max-width: 440px; width: 100%; border: 0; border-radius: 16px; }
+.auth-title { color: var(--primary); }
+.otp-input { letter-spacing: .5em; text-align: center; font-size: 1.5rem; }
+.btn-brand { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn-brand:hover, .btn-brand:focus { background: #14414a; border-color: #14414a; color: #fff; }
+
+/* Thông báo nổi */
+#toastHost { position: fixed; top: 1rem; right: 1rem; z-index: 2000; display: flex; flex-direction: column; gap: .5rem; width: min(380px, calc(100vw - 2rem)); }

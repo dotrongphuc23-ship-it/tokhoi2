@@ -1,0 +1,577 @@
+require('dotenv').config();
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const multer = require('multer');
+const { Pool } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const path = require('path');
+
+// ================= 0. CẤU HÌNH CHUNG =================
+const IS_PROD = process.env.NODE_ENV === 'production';
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+    console.error('❌ Thiếu JWT_SECRET (tối thiểu 32 ký tự) trong file .env. Server không khởi động.');
+    process.exit(1);
+}
+
+const ADMIN_ROLES = ['master_admin', 'admin'];
+const STAFF_ROLES = ['teacher', ...ADMIN_ROLES];
+const CATEGORIES = ['bai_giang', 'giao_an', 'de_thi', 'tu_lieu', 'dao_tao'];
+const STUDENT_CATEGORIES = ['bai_giang']; // học sinh / phụ huynh chỉ được xem mục này
+const GRADES = ['1', '2', '3', '4', '5'];
+const SUBJECTS = ['Tiếng Việt', 'Toán', 'Tiếng Anh', 'Tự nhiên & Xã hội', 'Khoa học', 'Lịch sử & Địa lý'];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const app = express();
+if (IS_PROD) app.set('trust proxy', 1);
+// CSP tắt vì giao diện đang dùng onclick/inline script và CDN; các header bảo mật khác của helmet vẫn bật.
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json({ limit: '200kb' }));
+app.use(express.urlencoded({ extended: true, limit: '200kb' }));
+app.use(cookieParser());
+app.use(express.static('public'));
+
+// ================= 1. TIỆN ÍCH =================
+const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const httpError = (message, status = 400) => Object.assign(new Error(message), { isHttp: true, status });
+const cleanStr = (v) => (typeof v === 'string' ? v.trim() : '');
+const normEmail = (v) => cleanStr(v).toLowerCase();
+const toInt = (v) => { const n = Number(v); return Number.isInteger(n) && n > 0 && n <= 2147483647 ? n : null; };
+const sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
+const isStaff = (user) => STAFF_ROLES.includes(user.role);
+const isAdmin = (user) => ADMIN_ROLES.includes(user.role);
+const canAccessCategory = (user, category) => isStaff(user) || STUDENT_CATEGORIES.includes(category);
+const COOKIE_OPTS = { httpOnly: true, secure: IS_PROD, sameSite: 'strict' };
+const DUMMY_HASH = bcrypt.hashSync('khong-phai-mat-khau-that', 10);
+
+function validatePassword(pw) {
+    if (typeof pw !== 'string' || pw.length < 6) return 'Mật khẩu phải có ít nhất 6 ký tự.';
+    if (pw.length > 72) return 'Mật khẩu tối đa 72 ký tự.';
+    return null;
+}
+
+// ================= 2. DATABASE =================
+const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT || 5432,
+    ssl: { rejectUnauthorized: false },
+    max: 10
+});
+pool.on('error', (err) => console.error('Lỗi kết nối DB nhàn rỗi:', err.message));
+
+const DEFAULT_CLASSES = [['1A', 'Lớp 1A', 'Cô Mai'], ['2B', 'Lớp 2B', 'Thầy Nam'], ['3C', 'Lớp 3C', 'Cô Hà'], ['4A', 'Lớp 4A', 'Cô Ngọc'], ['5A', 'Lớp 5A', 'Thầy Trí']];
+
+const initDB = async () => {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, full_name VARCHAR(100), email VARCHAR(100) UNIQUE, password_hash VARCHAR(255), role VARCHAR(50), status VARCHAR(50), reset_otp_hash VARCHAR(255), reset_otp_expires BIGINT, reset_attempts INT DEFAULT 0, reset_sent_at BIGINT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS settings (id SERIAL PRIMARY KEY, portal VARCHAR(50) UNIQUE, school_name VARCHAR(255), slogan VARCHAR(255), contact VARCHAR(255), banner_url TEXT);
+        CREATE TABLE IF NOT EXISTS lectures (id SERIAL PRIMARY KEY, title VARCHAR(255), description TEXT, grade VARCHAR(50), subject VARCHAR(100), category_type VARCHAR(50), file_name VARCHAR(255), file_url TEXT, file_type VARCHAR(20), author_name VARCHAR(100), views_count INT DEFAULT 0, avg_rating FLOAT DEFAULT 5.0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS timetable (class_id VARCHAR(50) PRIMARY KEY, schedule JSONB);
+        CREATE TABLE IF NOT EXISTS reviews (id SERIAL PRIMARY KEY, lecture_id INT REFERENCES lectures(id) ON DELETE CASCADE, author_name VARCHAR(100), stars INT, comment TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS classes (class_id VARCHAR(20) PRIMARY KEY, class_name VARCHAR(100) NOT NULL, teacher_name VARCHAR(100) DEFAULT '');
+
+        ALTER TABLE users DROP COLUMN IF EXISTS reset_token_hash;
+        ALTER TABLE users DROP COLUMN IF EXISTS reset_token_expires;
+        ALTER TABLE lectures ADD COLUMN IF NOT EXISTS author_id INT REFERENCES users(id) ON DELETE SET NULL;
+        ALTER TABLE reviews ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id) ON DELETE SET NULL;
+        CREATE UNIQUE INDEX IF NOT EXISTS reviews_lecture_user_uq ON reviews (lecture_id, user_id);
+    `);
+
+    await pool.query(`
+        UPDATE lectures l SET author_id = u.id FROM users u
+        WHERE l.author_id IS NULL AND l.author_name = u.full_name AND u.role IN ('teacher','master_admin','admin')
+          AND (SELECT COUNT(*) FROM users x WHERE x.full_name = u.full_name) = 1
+    `);
+
+    const adminEmail = normEmail(process.env.ADMIN_EMAIL);
+    const adminPass = process.env.ADMIN_PASSWORD;
+    if (adminEmail && adminPass) {
+        if (adminPass.length < 8) throw new Error('ADMIN_PASSWORD phải có ít nhất 8 ký tự.');
+        const hash = await bcrypt.hash(adminPass, 10);
+        const exist = await pool.query('SELECT id FROM users WHERE email = $1', [adminEmail]);
+        if (exist.rows.length) {
+            await pool.query("UPDATE users SET password_hash = $1, role = 'master_admin', status = 'approved' WHERE id = $2", [hash, exist.rows[0].id]);
+        } else {
+            await pool.query("INSERT INTO users (full_name, email, password_hash, role, status) VALUES ('Quản trị viên', $1, $2, 'master_admin', 'approved')", [adminEmail, hash]);
+        }
+        console.log('ℹ️  Đã đồng bộ tài khoản quản trị. Hãy XÓA ADMIN_PASSWORD khỏi .env sau lần chạy này.');
+    }
+
+    const setRes = await pool.query("SELECT 1 FROM settings WHERE portal = 'tieu_hoc'");
+    if (setRes.rows.length === 0) {
+        await pool.query("INSERT INTO settings (portal, school_name, slogan, contact, banner_url) VALUES ('tieu_hoc', 'TRƯỜNG TIỂU HỌC NGUYỄN DU', 'Ươm mầm tương lai', 'TP. Cần Thơ', '')");
+    }
+    const clsRes = await pool.query('SELECT 1 FROM classes LIMIT 1');
+    if (clsRes.rows.length === 0) {
+        for (const [id, name, teacher] of DEFAULT_CLASSES) {
+            await pool.query('INSERT INTO classes (class_id, class_name, teacher_name) VALUES ($1, $2, $3)', [id, name, teacher]);
+        }
+    }
+    console.log('✅ Kết nối database & khởi tạo bảng thành công.');
+};
+
+// ================= 3. LƯU TRỮ TỆP (SUPABASE STORAGE) =================
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+const DOC_EXTS = ['.pdf', '.mp4', '.pptx', '.ppt', '.docx', '.doc'];
+const BANNER_EXTS = ['.jpg', '.jpeg', '.png', '.webp'];
+
+const memoryStorage = multer.memoryStorage();
+
+const upload = multer({
+    storage: memoryStorage,
+    limits: { fileSize: 50 * 1024 * 1024 }, // Giới hạn 50MB
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        DOC_EXTS.includes(ext) ? cb(null, true) : cb(httpError('Định dạng file không được hỗ trợ (chỉ nhận .pdf, .pptx, .ppt, .docx, .doc, .mp4).'));
+    }
+});
+
+const bannerUpload = multer({
+    storage: memoryStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        BANNER_EXTS.includes(ext) ? cb(null, true) : cb(httpError('Ảnh banner chỉ nhận .jpg, .png, .webp (tối đa 5MB).'));
+    }
+});
+
+// Xóa file trên Supabase Bucket
+async function destroyCloudFile(fileUrl) {
+    if (!fileUrl) return;
+    try {
+        const urlObj = new URL(fileUrl);
+        const pathParts = urlObj.pathname.split('/thuvien/');
+        if (pathParts.length > 1) {
+            const filePath = decodeURIComponent(pathParts[1]);
+            await supabase.storage.from('thuvien').remove([filePath]);
+        }
+    } catch (e) { console.error('Không xóa được file trên Supabase:', e.message); }
+}
+
+// Hàm đẩy file từ RAM (Buffer) lên Supabase
+async function uploadToSupabase(fileBuffer, originalName, folderName, mimeType) {
+    const ext = path.extname(originalName).toLowerCase();
+    const cleanName = path.basename(originalName, ext)
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+        .replace(/[^a-zA-Z0-9]/g, '_').slice(0, 60) || 'file';
+    const fileName = `${folderName}/${cleanName}_${Date.now()}${ext}`;
+
+    const { data, error } = await supabase.storage
+        .from('thuvien')
+        .upload(fileName, fileBuffer, {
+            contentType: mimeType || 'application/octet-stream', // Đã sửa để truyền đúng định dạng file
+            upsert: false
+        });
+
+    if (error) {
+        console.error('\n❌ CHI TIẾT LỖI TỪ SUPABASE:', error);
+        throw new Error('Supabase từ chối file: ' + error.message);
+    }
+
+    const { data: publicUrlData } = supabase.storage.from('thuvien').getPublicUrl(fileName);
+    return publicUrlData.publicUrl;
+}
+
+// ================= 4. MIDDLEWARE BẢO MẬT =================
+const makeLimiter = (minutes, max, message, extra = {}) => rateLimit({
+    windowMs: minutes * 60 * 1000, max, standardHeaders: true, legacyHeaders: false, message: { error: message }, ...extra
+});
+const loginLimiter = makeLimiter(15, 10, 'Bạn đăng nhập sai quá nhiều lần. Hãy thử lại sau 15 phút.', { skipSuccessfulRequests: true });
+const registerLimiter = makeLimiter(60, 10, 'Bạn đã đăng ký quá nhiều lần. Hãy thử lại sau.');
+const forgotLimiter = makeLimiter(15, 5, 'Bạn đã yêu cầu quá nhiều lần. Hãy thử lại sau 15 phút.');
+const otpLimiter = makeLimiter(15, 10, 'Bạn đã thử quá nhiều lần. Hãy thử lại sau 15 phút.');
+
+const verifyToken = wrap(async (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: 'Chưa đăng nhập.' });
+    let payload;
+    try { payload = jwt.verify(token, JWT_SECRET); } catch { return res.status(401).json({ error: 'Phiên đăng nhập đã hết hạn.' }); }
+    const { rows } = await pool.query('SELECT id, full_name, email, role, status FROM users WHERE id = $1', [payload.id]);
+    const u = rows[0];
+    if (!u || (u.role === 'teacher' && u.status !== 'approved')) return res.status(401).json({ error: 'Tài khoản không còn hiệu lực.' });
+    req.user = { id: u.id, name: u.full_name, email: u.email, role: u.role };
+    next();
+});
+const requireRole = (...roles) => (req, res, next) =>
+    roles.includes(req.user.role) ? next() : res.status(403).json({ error: 'Bạn không có quyền thực hiện thao tác này.' });
+const requireAdmin = requireRole(...ADMIN_ROLES);
+const requireStaff = requireRole(...STAFF_ROLES);
+
+// ================= 5. XÁC THỰC =================
+app.post('/api/auth/login', loginLimiter, wrap(async (req, res) => {
+    const email = normEmail(req.body.email);
+    const password = req.body.password;
+    if (!email || typeof password !== 'string' || !password) return res.status(400).json({ error: 'Vui lòng nhập email và mật khẩu.' });
+    const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = rows[0];
+    const ok = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
+    if (!user || !ok) return res.status(401).json({ error: 'Sai email hoặc mật khẩu.' });
+    if (user.role === 'teacher' && user.status !== 'approved') return res.status(403).json({ error: 'Tài khoản đang chờ Ban giám hiệu duyệt.' });
+
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('token', token, { ...COOKIE_OPTS, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.json({ user: { id: user.id, name: user.full_name, email: user.email, role: user.role } });
+}));
+
+app.post('/api/auth/logout', (req, res) => { res.clearCookie('token', COOKIE_OPTS); res.json({ message: 'Đã đăng xuất.' }); });
+
+app.get('/api/me', verifyToken, (req, res) => res.json({ user: req.user }));
+
+app.post('/api/auth/register', registerLimiter, wrap(async (req, res) => {
+    const fullName = cleanStr(req.body.full_name);
+    const email = normEmail(req.body.email);
+    const password = req.body.password;
+    if (fullName.length < 2 || fullName.length > 100) return res.status(400).json({ error: 'Họ tên phải từ 2 đến 100 ký tự.' });
+    if (!EMAIL_RE.test(email) || email.length > 100) return res.status(400).json({ error: 'Email không hợp lệ.' });
+    const pwErr = validatePassword(password);
+    if (pwErr) return res.status(400).json({ error: pwErr });
+
+    const isTeacher = req.body.role === 'teacher';
+    const hash = await bcrypt.hash(password, 10);
+    try {
+        await pool.query('INSERT INTO users (full_name, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5)',
+            [fullName, email, hash, isTeacher ? 'teacher' : 'student', isTeacher ? 'pending' : 'approved']);
+    } catch (err) {
+        if (err.code === '23505') return res.status(409).json({ error: 'Email này đã được đăng ký.' });
+        throw err;
+    }
+    res.json({ message: isTeacher ? 'Đăng ký thành công! Tài khoản giáo viên đang chờ Ban giám hiệu duyệt.' : 'Đăng ký thành công! Bạn có thể đăng nhập ngay.' });
+}));
+
+// ================= 6. QUÊN MẬT KHẨU (OTP QUA GMAIL) =================
+const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASS } });
+const FORGOT_REPLY = { message: 'Nếu email tồn tại, mã xác nhận đã được gửi.' };
+
+app.post('/api/auth/forgot-password', forgotLimiter, wrap(async (req, res) => {
+    const email = normEmail(req.body.email);
+    if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email không hợp lệ.' });
+    const { rows } = await pool.query('SELECT id, reset_sent_at FROM users WHERE email = $1', [email]);
+    const user = rows[0];
+    if (!user || (user.reset_sent_at && Date.now() - Number(user.reset_sent_at) < 60000)) return res.json(FORGOT_REPLY);
+
+    const otp = String(crypto.randomInt(100000, 1000000));
+    const now = Date.now();
+    await pool.query('UPDATE users SET reset_otp_hash = $1, reset_otp_expires = $2, reset_sent_at = $3, reset_attempts = 0 WHERE id = $4', [sha(otp), now + 600000, now, user.id]);
+    transporter.sendMail({
+        from: `"Cổng Thông Tin Học Tập" <${process.env.GMAIL_USER}>`,
+        to: email,
+        subject: 'Khôi phục mật khẩu',
+        html: `<h3>Khôi phục mật khẩu</h3><p>Mã OTP của bạn: <b style="font-size:24px">${otp}</b></p><p>Mã có hiệu lực trong 10 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>`
+    }).catch((err) => console.error('Lỗi gửi mail OTP:', err.message));
+    res.json(FORGOT_REPLY);
+}));
+
+app.post('/api/auth/verify-otp-reset', otpLimiter, wrap(async (req, res) => {
+    const email = normEmail(req.body.email);
+    const otp = cleanStr(req.body.otp);
+    const newPassword = req.body.new_password;
+    if (!EMAIL_RE.test(email) || !/^\d{6}$/.test(otp)) return res.status(400).json({ error: 'Mã OTP phải gồm đúng 6 chữ số.' });
+    const pwErr = validatePassword(newPassword);
+    if (pwErr) return res.status(400).json({ error: pwErr });
+
+    const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = rows[0];
+    if (!user || !user.reset_otp_hash || Date.now() > Number(user.reset_otp_expires)) return res.status(400).json({ error: 'Mã OTP không đúng hoặc đã hết hạn.' });
+    if (user.reset_attempts >= 5) return res.status(429).json({ error: 'Bạn đã nhập sai quá nhiều lần. Hãy yêu cầu mã mới.' });
+
+    const given = Buffer.from(sha(otp));
+    const stored = Buffer.from(user.reset_otp_hash);
+    if (given.length !== stored.length || !crypto.timingSafeEqual(given, stored)) {
+        await pool.query('UPDATE users SET reset_attempts = reset_attempts + 1 WHERE id = $1', [user.id]);
+        return res.status(400).json({ error: 'Mã OTP không đúng hoặc đã hết hạn.' });
+    }
+    const hash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password_hash = $1, reset_otp_hash = NULL, reset_otp_expires = NULL, reset_attempts = 0 WHERE id = $2', [hash, user.id]);
+    res.json({ message: 'Đổi mật khẩu thành công! Hãy đăng nhập lại.' });
+}));
+
+// ================= 7. CÀI ĐẶT TRƯỜNG =================
+app.get('/api/settings', wrap(async (req, res) => {
+    const { rows } = await pool.query("SELECT * FROM settings WHERE portal = 'tieu_hoc'");
+    const r = rows[0];
+    res.json(r ? { schoolName: r.school_name, slogan: r.slogan, contact: r.contact, bannerUrl: r.banner_url } : {});
+}));
+
+app.post('/api/settings', verifyToken, requireAdmin, bannerUpload.single('banner'), wrap(async (req, res) => {
+    const schoolName = cleanStr(req.body.schoolName), slogan = cleanStr(req.body.slogan), contact = cleanStr(req.body.contact);
+    const invalid = !schoolName || !slogan || !contact || schoolName.length > 255 || slogan.length > 255 || contact.length > 255;
+    if (invalid) return res.status(400).json({ error: 'Tên trường, slogan và liên hệ là bắt buộc (tối đa 255 ký tự mỗi mục).' });
+    
+    if (req.file) {
+        const publicUrl = await uploadToSupabase(req.file.buffer, req.file.originalname, 'banner', req.file.mimetype);
+        const old = await pool.query("SELECT banner_url FROM settings WHERE portal = 'tieu_hoc'");
+        await pool.query("UPDATE settings SET school_name = $1, slogan = $2, contact = $3, banner_url = $4 WHERE portal = 'tieu_hoc'", [schoolName, slogan, contact, publicUrl]);
+        if (old.rows[0] && old.rows[0].banner_url) await destroyCloudFile(old.rows[0].banner_url);
+    } else {
+        await pool.query("UPDATE settings SET school_name = $1, slogan = $2, contact = $3 WHERE portal = 'tieu_hoc'", [schoolName, slogan, contact]);
+    }
+    res.json({ message: 'Cập nhật thành công!' });
+}));
+
+// ================= 8. QUẢN LÝ GIÁO VIÊN =================
+app.get('/api/admin/pending-teachers', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const { rows } = await pool.query("SELECT id, full_name, email FROM users WHERE role = 'teacher' AND status = 'pending' ORDER BY created_at");
+    res.json(rows);
+}));
+app.get('/api/admin/teachers', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const { rows } = await pool.query("SELECT id, full_name, email FROM users WHERE role = 'teacher' AND status = 'approved' ORDER BY full_name");
+    res.json(rows);
+}));
+app.post('/api/admin/manage-teacher', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const id = toInt(req.body.teacher_id);
+    const action = req.body.action;
+    if (!id || !['approve', 'reject'].includes(action)) return res.status(400).json({ error: 'Yêu cầu không hợp lệ.' });
+    const result = action === 'approve'
+        ? await pool.query("UPDATE users SET status = 'approved' WHERE id = $1 AND role = 'teacher' AND status = 'pending'", [id])
+        : await pool.query("DELETE FROM users WHERE id = $1 AND role = 'teacher' AND status = 'pending'", [id]);
+    if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy hồ sơ giáo viên đang chờ duyệt.' });
+    res.json({ message: action === 'approve' ? 'Đã duyệt giáo viên!' : 'Đã từ chối hồ sơ!' });
+}));
+app.post('/api/admin/delete-teacher', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const id = toInt(req.body.teacher_id);
+    if (!id) return res.status(400).json({ error: 'Yêu cầu không hợp lệ.' });
+    const result = await pool.query("DELETE FROM users WHERE id = $1 AND role = 'teacher'", [id]);
+    if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy giáo viên.' });
+    res.json({ message: 'Đã xóa giáo viên!' });
+}));
+
+// ================= 9. HỌC LIỆU =================
+function parseLectureFields(b) {
+    const title = cleanStr(b.title), description = cleanStr(b.description), grade = cleanStr(String(b.grade ?? ''));
+    const subject = cleanStr(b.subject), category = cleanStr(b.category_type) || 'bai_giang';
+    if (!title || title.length > 255) return { error: 'Tên tài liệu phải từ 1 đến 255 ký tự.' };
+    if (description.length > 2000) return { error: 'Mô tả tối đa 2000 ký tự.' };
+    if (!GRADES.includes(grade)) return { error: 'Khối lớp không hợp lệ.' };
+    if (!SUBJECTS.includes(subject)) return { error: 'Môn học không hợp lệ.' };
+    if (!CATEGORIES.includes(category)) return { error: 'Loại tài liệu không hợp lệ.' };
+    return { value: { title, description, grade, subject, category } };
+}
+const canManageLecture = (user, lecture) => isAdmin(user) || (user.role === 'teacher' && lecture.author_id === user.id);
+
+app.post('/api/lectures', verifyToken, requireStaff, upload.single('file'), wrap(async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'Chưa chọn file.' });
+    const parsed = parseLectureFields(req.body);
+    if (parsed.error) return res.status(400).json({ error: parsed.error }); 
+    
+    const f = parsed.value;
+    const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+    const fType = path.extname(originalName).substring(1).toLowerCase();
+
+    // Tải lên Supabase Storage với MIME type
+    const publicUrl = await uploadToSupabase(req.file.buffer, originalName, 'tailieu', req.file.mimetype);
+
+    await pool.query(
+        'INSERT INTO lectures (title, description, grade, subject, category_type, file_name, file_url, file_type, author_name, author_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+        [f.title, f.description, f.grade, f.subject, f.category, originalName.slice(0, 255), publicUrl, fType, req.user.name, req.user.id]
+    );
+    res.json({ message: 'Tải lên thành công!' });
+}));
+
+app.get('/api/lectures', verifyToken, wrap(async (req, res) => {
+    const where = [], vals = [];
+    const add = (sql, v) => { vals.push(v); where.push(sql.split('?').join('$' + vals.length)); };
+
+    const category = cleanStr(req.query.category_type);
+    if (category && !CATEGORIES.includes(category)) return res.status(400).json({ error: 'Loại tài liệu không hợp lệ.' });
+    if (!isStaff(req.user)) {
+        if (category && !STUDENT_CATEGORIES.includes(category)) return res.status(403).json({ error: 'Bạn không có quyền xem mục này.' });
+        add('category_type = ANY(?)', STUDENT_CATEGORIES);
+    }
+    if (category) add('category_type = ?', category);
+
+    const grade = cleanStr(String(req.query.grade ?? ''));
+    if (grade) { if (!GRADES.includes(grade)) return res.status(400).json({ error: 'Khối lớp không hợp lệ.' }); add('grade = ?', grade); }
+    const subject = cleanStr(req.query.subject);
+    if (subject) add('subject = ?', subject.slice(0, 100));
+    const search = cleanStr(req.query.search).slice(0, 100);
+    if (search) add('(title ILIKE ? OR description ILIKE ?)', '%' + search.replace(/[\\%_]/g, '\\$&') + '%');
+
+    const limit = Math.min(toInt(req.query.limit) || 12, 50);
+    const page = toInt(req.query.page) || 1;
+    const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
+    const total = Number((await pool.query(`SELECT COUNT(*) FROM lectures ${whereSql}`, vals)).rows[0].count);
+    const { rows } = await pool.query(
+        `SELECT id, title, description, grade, subject, category_type, file_type, author_name, author_id, views_count, avg_rating, created_at
+         FROM lectures ${whereSql} ORDER BY created_at DESC, id DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}`, vals);
+    res.json({ items: rows, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
+}));
+
+app.get('/api/lectures/:id', verifyToken, wrap(async (req, res) => {
+    const id = toInt(req.params.id);
+    if (!id) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+    const countView = req.query.count_view !== '0';
+    const params = [id];
+    let extra = '';
+    if (!isStaff(req.user)) { params.push(STUDENT_CATEGORIES); extra = ' AND category_type = ANY($2)'; }
+    const sql = countView
+        ? `UPDATE lectures SET views_count = views_count + 1 WHERE id = $1${extra} RETURNING *`
+        : `SELECT * FROM lectures WHERE id = $1${extra}`;
+    const { rows } = await pool.query(sql, params);
+    if (!rows[0]) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+
+    const revs = await pool.query(
+        `SELECT r.author_name AS author, r.stars, r.comment, to_char(r.created_at, 'DD/MM/YYYY') AS created_at, (r.user_id = $2) AS mine
+         FROM reviews r WHERE r.lecture_id = $1 ORDER BY r.created_at DESC, r.id DESC`, [id, req.user.id]);
+    const lecture = rows[0];
+    lecture.ratings = revs.rows.map(({ mine, ...r }) => r);
+    lecture.already_reviewed = revs.rows.some((r) => r.mine);
+    lecture.can_manage = canManageLecture(req.user, lecture);
+    res.json(lecture);
+}));
+
+app.post('/api/lectures/:id/reviews', verifyToken, wrap(async (req, res) => {
+    const id = toInt(req.params.id);
+    const stars = Number(req.body.stars);
+    const comment = cleanStr(req.body.comment);
+    if (!id) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+    if (!Number.isInteger(stars) || stars < 1 || stars > 5) return res.status(400).json({ error: 'Số sao phải từ 1 đến 5.' });
+    if (!comment || comment.length > 1000) return res.status(400).json({ error: 'Nhận xét phải từ 1 đến 1000 ký tự.' });
+
+    const lec = await pool.query('SELECT category_type FROM lectures WHERE id = $1', [id]);
+    if (!lec.rows[0] || !canAccessCategory(req.user, lec.rows[0].category_type)) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+    try {
+        await pool.query('INSERT INTO reviews (lecture_id, user_id, author_name, stars, comment) VALUES ($1, $2, $3, $4, $5)', [id, req.user.id, req.user.name, stars, comment]);
+    } catch (err) {
+        if (err.code === '23505') return res.status(409).json({ error: 'Bạn đã đánh giá tài liệu này rồi.' });
+        throw err;
+    }
+    await pool.query('UPDATE lectures SET avg_rating = (SELECT ROUND(AVG(stars)::numeric, 1) FROM reviews WHERE lecture_id = $1) WHERE id = $1', [id]);
+    res.json({ message: 'Đã gửi đánh giá!' });
+}));
+
+app.put('/api/lectures/:id', verifyToken, requireStaff, wrap(async (req, res) => {
+    const id = toInt(req.params.id);
+    if (!id) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+    const { rows } = await pool.query('SELECT id, author_id FROM lectures WHERE id = $1', [id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+    if (!canManageLecture(req.user, rows[0])) return res.status(403).json({ error: 'Bạn chỉ được sửa tài liệu do chính mình đăng.' });
+    const parsed = parseLectureFields(req.body);
+    if (parsed.error) return res.status(400).json({ error: parsed.error });
+    const f = parsed.value;
+    await pool.query('UPDATE lectures SET title=$1, description=$2, grade=$3, subject=$4, category_type=$5 WHERE id=$6', [f.title, f.description, f.grade, f.subject, f.category, id]);
+    res.json({ message: 'Đã cập nhật tài liệu!' });
+}));
+
+app.delete('/api/lectures/:id', verifyToken, requireStaff, wrap(async (req, res) => {
+    const id = toInt(req.params.id);
+    if (!id) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+    const { rows } = await pool.query('SELECT id, author_id, file_url FROM lectures WHERE id = $1', [id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+    if (!canManageLecture(req.user, rows[0])) return res.status(403).json({ error: 'Bạn chỉ được xóa tài liệu do chính mình đăng.' });
+    await pool.query('DELETE FROM lectures WHERE id = $1', [id]);
+    await destroyCloudFile(rows[0].file_url);
+    res.json({ message: 'Đã xóa tài liệu!' });
+}));
+
+// ================= 10. LỚP HỌC & THỜI KHÓA BIỂU =================
+const CLASS_ID_RE = /^[A-Za-z0-9]{1,10}$/;
+const DEFAULT_SCHEDULE = [['Tiết 1', '07:30'], ['Tiết 2', '08:15'], ['Tiết 3', '09:20'], ['Tiết 4', '10:05'], ['Tiết 5', '10:50']]
+    .map(([period, time]) => ({ period, time, t2: '', t3: '', t4: '', t5: '', t6: '' }));
+
+app.get('/api/classes', verifyToken, wrap(async (req, res) => {
+    const { rows } = await pool.query('SELECT class_id, class_name, teacher_name FROM classes ORDER BY class_id');
+    res.json(rows);
+}));
+app.post('/api/classes', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const classId = cleanStr(req.body.class_id).toUpperCase();
+    const teacher = cleanStr(req.body.teacher_name);
+    const name = cleanStr(req.body.class_name) || `Lớp ${classId}`;
+    if (!CLASS_ID_RE.test(classId)) return res.status(400).json({ error: 'Mã lớp chỉ gồm chữ và số, tối đa 10 ký tự (ví dụ 1A).' });
+    if (name.length > 100 || teacher.length > 100) return res.status(400).json({ error: 'Tên lớp và tên giáo viên tối đa 100 ký tự.' });
+    await pool.query(
+        'INSERT INTO classes (class_id, class_name, teacher_name) VALUES ($1, $2, $3) ON CONFLICT (class_id) DO UPDATE SET class_name = EXCLUDED.class_name, teacher_name = EXCLUDED.teacher_name',
+        [classId, name, teacher]);
+    res.json({ message: 'Đã lưu lớp học!' });
+}));
+app.delete('/api/classes/:classId', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const classId = cleanStr(req.params.classId).toUpperCase();
+    if (!CLASS_ID_RE.test(classId)) return res.status(400).json({ error: 'Mã lớp không hợp lệ.' });
+    await pool.query('DELETE FROM timetable WHERE class_id = $1', [classId]);
+    const result = await pool.query('DELETE FROM classes WHERE class_id = $1', [classId]);
+    if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy lớp.' });
+    res.json({ message: 'Đã xóa lớp học!' });
+}));
+
+app.get('/api/timetable/:classId', verifyToken, wrap(async (req, res) => {
+    const classId = cleanStr(req.params.classId).toUpperCase();
+    if (!CLASS_ID_RE.test(classId)) return res.status(400).json({ error: 'Mã lớp không hợp lệ.' });
+    const cls = await pool.query('SELECT 1 FROM classes WHERE class_id = $1', [classId]);
+    if (!cls.rows.length) return res.status(404).json({ error: 'Không tìm thấy lớp.' });
+    const { rows } = await pool.query('SELECT schedule FROM timetable WHERE class_id = $1', [classId]);
+    res.json(rows[0] ? rows[0].schedule : DEFAULT_SCHEDULE);
+}));
+app.post('/api/timetable/:classId', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const classId = cleanStr(req.params.classId).toUpperCase();
+    if (!CLASS_ID_RE.test(classId)) return res.status(400).json({ error: 'Mã lớp không hợp lệ.' });
+    const cls = await pool.query('SELECT 1 FROM classes WHERE class_id = $1', [classId]);
+    if (!cls.rows.length) return res.status(404).json({ error: 'Không tìm thấy lớp.' });
+
+    const input = req.body.schedule;
+    if (!Array.isArray(input) || input.length < 1 || input.length > 15) return res.status(400).json({ error: 'Thời khóa biểu phải có từ 1 đến 15 tiết.' });
+    const fields = ['period', 'time', 't2', 't3', 't4', 't5', 't6'];
+    const schedule = [];
+    for (const row of input) {
+        if (!row || typeof row !== 'object') return res.status(400).json({ error: 'Dữ liệu thời khóa biểu không hợp lệ.' });
+        const clean = {};
+        for (const f of fields) {
+            const v = cleanStr(row[f]);
+            if (v.length > 60) return res.status(400).json({ error: 'Mỗi ô tối đa 60 ký tự.' });
+            clean[f] = v;
+        }
+        schedule.push(clean);
+    }
+    await pool.query('INSERT INTO timetable (class_id, schedule) VALUES ($1, $2) ON CONFLICT (class_id) DO UPDATE SET schedule = EXCLUDED.schedule', [classId, JSON.stringify(schedule)]);
+    res.json({ message: 'Lưu lịch thành công!' });
+}));
+
+// ================= 11. XỬ LÝ LỖI =================
+app.use('/api', (req, res) => res.status(404).json({ error: 'Không tìm thấy đường dẫn.' }));
+app.use((err, req, res, next) => {
+    if (res.headersSent) return next(err);
+    if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'File vượt quá dung lượng cho phép.' : 'Lỗi khi tải file lên.' });
+    }
+    if (err.isHttp) return res.status(err.status).json({ error: err.message });
+    if (err.type === 'entity.parse.failed' || err.type === 'entity.too.large') return res.status(400).json({ error: 'Dữ liệu gửi lên không hợp lệ.' });
+    console.error('Lỗi máy chủ:', err);
+    res.status(500).json({ error: 'Lỗi máy chủ. Vui lòng thử lại sau.' });
+});
+
+process.on('unhandledRejection', (e) => console.error('Unhandled rejection:', e));
+
+initDB()
+    .then(() => {
+        app.listen(PORT, async () => {
+            console.log(`>>> Máy chủ chạy tại: http://localhost:${PORT}`);
+            
+            // Chỉ bật ngrok khi chạy ở môi trường phát triển (không phải production)
+            if (!IS_PROD) {
+                try {
+                    // Sử dụng thư viện ngrok chính chủ
+                    const ngrok = require('@ngrok/ngrok');
+                    const listener = await ngrok.forward({
+                        addr: PORT,
+                        authtoken: process.env.NGROK_AUTHTOKEN
+                    });
+                    console.log(`>>> 🌐 Ngrok Tunnel (Public URL): ${listener.url()}`);
+                } catch (err) {
+                    console.error('⚠️ Không thể khởi động ngrok (kiểm tra lại NGROK_AUTHTOKEN trong .env):', err.message);
+                }
+            }
+        });
+    })
+    .catch((err) => { 
+        console.error('❌ Không khởi động được:', err.message); 
+        process.exit(1); 
+    });

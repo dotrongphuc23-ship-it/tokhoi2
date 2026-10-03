@@ -1,0 +1,27 @@
+{
+  "name": "wedtieuhoc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "forgot-password.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ngrok/ngrok": "^1.7.0",
+    "@supabase/supabase-js": "^2.117.2",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.0.13",
+    "pg": "^8.23.1"
+  }
+}

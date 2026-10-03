@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải lên - Cổng Tiểu Học</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="common.css" rel="stylesheet">
+</head>
+<body>
+    <main class="container py-5" style="max-width: 700px;">
+        <div class="card p-4 p-md-5 shadow border-0 rounded-4">
+            <h1 class="h3 fw-bold text-center auth-title mb-4">📤 Đăng tải tài liệu tiểu học</h1>
+            <form id="uploadForm">
+                <div class="mb-3">
+                    <label for="category_type" class="form-label fw-bold">Loại tài liệu <span class="text-danger">*</span></label>
+                    <select name="category_type" id="category_type" class="form-select" required>
+                        <option value="bai_giang">📖 Bài giảng điện tử (PowerPoint / Video)</option>
+                        <option value="giao_an">📝 Kế hoạch bài dạy / Giáo án (Word / PDF)</option>
+                        <option value="de_thi">📑 Đề thi và đề kiểm tra</option>
+                        <option value="tu_lieu">🖼️ Tư liệu dạy học</option>
+                        <option value="dao_tao">🎓 Tài liệu đào tạo chuyên môn</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="title" class="form-label fw-bold">Tên bài giảng / tài liệu <span class="text-danger">*</span></label>
+                    <input type="text" name="title" id="title" class="form-control" required maxlength="255" placeholder="Nhập tên tài liệu...">
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="grade" class="form-label fw-bold">Khối lớp <span class="text-danger">*</span></label>
+                        <select name="grade" id="grade" class="form-select" required>
+                            <option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option>
+                            <option value="4">Khối 4</option><option value="5">Khối 5</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label for="subject" class="form-label fw-bold">Môn học <span class="text-danger">*</span></label>
+                        <select name="subject" id="subject" class="form-select" required></select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label fw-bold">Mô tả thêm (tùy chọn)</label>
+                    <textarea name="description" id="description" class="form-control" rows="2" maxlength="2000" placeholder="Ghi chú mục tiêu..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="file" class="form-label fw-bold">File đính kèm (.pdf, .pptx, .docx, .mp4, tối đa 10MB) <span class="text-danger">*</span></label>
+                    <input type="file" name="file" id="file" class="form-control" required accept=".pdf,.pptx,.ppt,.docx,.doc,.mp4">
+                </div>
+                <button type="submit" id="btnSub" class="btn btn-brand w-100 py-2 fw-bold">Đăng lên thư viện</button>
+                <div class="text-center mt-3"><a href="index.html" class="text-secondary text-decoration-none">← Quay lại trang chủ</a></div>
+            </form>
+        </div>
+    </main>
+    <script src="common.js"></script>
+    <script>
+        const MAX_FILE = 50 * 1024 * 1024;
+        document.getElementById('subject').innerHTML = optionsHtml(SUBJECTS);
+
+        // Quyền được kiểm tra ở server; trang chỉ dùng kết quả để điều hướng sớm cho thân thiện
+        (async function init() {
+            const user = await requireUser();
+            if (!user) return;
+            if (!['teacher', 'admin', 'master_admin'].includes(user.role)) {
+                notify('Chỉ giáo viên và quản trị viên mới được đăng tải tài liệu.');
+                setTimeout(() => location.replace('index.html'), 1500);
+            }
+        })();
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('file').files[0];
+            if (file && file.size > MAX_FILE) { notify('File vượt quá 10MB. Hãy nén hoặc chọn file nhỏ hơn.'); return; }
+            const btn = document.getElementById('btnSub');
+            setBusy(btn, true, 'Đang tải lên, vui lòng không đóng trang...');
+            try {
+                await api('/api/lectures', { method: 'POST', form: new FormData(e.target) });
+                notify('Tải lên tài liệu thành công!', 'success', 3000);
+                setTimeout(() => { location.href = 'index.html'; }, 1200);
+            } catch (err) {
+                notify(err.message);
+                setBusy(btn, false);
+            }
+        });
+    </script>
+</body>
+</html>

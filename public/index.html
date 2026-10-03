@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng Tiểu Học</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="common.css" rel="stylesheet">
+    <style>
+        .nav-link { font-weight: 600; color: #2c3e50 !important; background: none; border: 0; border-bottom: 3px solid transparent; cursor: pointer; }
+        .nav-link.active { color: var(--primary) !important; border-bottom-color: var(--primary); }
+        .nav-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4 mb-3">
+        <div id="topBannerImage" class="shadow" role="img" aria-label="Ảnh banner của trường" style="width: 100%; height: 250px; background-position: center; background-size: cover; border-radius: 16px 16px 0 0; display: none;"></div>
+        <header id="headerBanner" class="shadow" style="background: linear-gradient(135deg, #1a535c, #4ecdc4); padding: 20px 30px; border-bottom: 5px solid var(--accent); color: white; border-radius: 16px;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center">
+                    <span class="fs-1 me-3" aria-hidden="true">📚</span>
+                    <div>
+                        <h1 class="h2 fw-bold mb-0 text-uppercase" id="schoolName">Đang tải...</h1>
+                        <div class="small text-warning" id="schoolSlogan"></div>
+                        <small id="schoolContact"></small>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold mb-1" id="userNameDisplay"></div>
+                    <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3" id="btnLogout">Đăng xuất</button>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm py-2 mb-4" aria-label="Danh mục">
+        <div class="container">
+            <ul class="navbar-nav me-auto flex-wrap" id="mainNav">
+                <li class="nav-item"><button type="button" class="nav-link active" data-category="bai_giang"><i class="fa fa-desktop text-danger"></i> Bài giảng</button></li>
+                <li class="nav-item" id="nav-giao-an"><button type="button" class="nav-link" data-category="giao_an"><i class="fa fa-book-open text-primary"></i> Giáo án</button></li>
+                <li class="nav-item" id="nav-de-thi"><button type="button" class="nav-link" data-category="de_thi"><i class="fa fa-file-alt text-warning"></i> Đề thi</button></li>
+                <li class="nav-item" id="nav-tu-lieu"><button type="button" class="nav-link" data-category="tu_lieu"><i class="fa fa-photo-video text-info"></i> Tư liệu</button></li>
+                <li class="nav-item" id="nav-dao-tao"><button type="button" class="nav-link" data-category="dao_tao"><i class="fa fa-graduation-cap text-success"></i> Đào tạo</button></li>
+                <li class="nav-item"><button type="button" class="nav-link" data-tab="timetable"><i class="fa fa-calendar-alt text-secondary"></i> Thời khóa biểu</button></li>
+            </ul>
+            <div id="headerActionArea" class="d-flex flex-wrap gap-1 mt-2 mt-lg-0"></div>
+        </div>
+    </nav>
+
+    <main class="container pb-5">
+        <!-- THƯ VIỆN TÀI LIỆU -->
+        <div id="sec-library">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card p-3 bg-white border-0 shadow-sm">
+                        <h2 class="h6 fw-bold text-danger mb-2">📚 Khối lớp</h2>
+                        <div class="list-group list-group-flush" id="gradeGroup">
+                            <button type="button" class="list-group-item list-group-item-action active" data-grade="">Tất cả các khối</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-grade="1">Khối 1</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-grade="2">Khối 2</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-grade="3">Khối 3</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-grade="4">Khối 4</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-grade="5">Khối 5</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="row g-2 mb-3">
+                        <div class="col-lg-8">
+                            <label for="searchInput" class="visually-hidden">Tìm kiếm tài liệu</label>
+                            <input type="search" id="searchInput" class="form-control form-control-lg" placeholder="Tìm kiếm tên tài liệu, bài giảng...">
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="subjectFilter" class="visually-hidden">Lọc theo môn học</label>
+                            <select id="subjectFilter" class="form-select form-select-lg"></select>
+                        </div>
+                    </div>
+                    <div class="row" id="lectureGrid"></div>
+                    <div class="d-flex justify-content-between align-items-center" id="pager"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- THỜI KHÓA BIỂU -->
+        <div id="sec-timetable" class="d-none">
+            <div class="card p-4 bg-white border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h2 class="h4 fw-bold text-primary mb-0"><i class="fa fa-calendar-alt"></i> Thời khóa biểu học kỳ</h2>
+                    <div class="d-flex align-items-center">
+                        <label for="classSelect" class="visually-hidden">Chọn lớp</label>
+                        <select class="form-select me-2" id="classSelect"></select>
+                        <div id="masterAdminEditScheduleBtn"></div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center align-middle">
+                        <thead class="table-primary">
+                            <tr><th>Tiết</th><th>Thời gian</th><th>Thứ Hai</th><th>Thứ Ba</th><th>Thứ Tư</th><th>Thứ Năm</th><th>Thứ Sáu</th></tr>
+                        </thead>
+                        <tbody id="scheduleBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL: CÀI ĐẶT TRƯỜNG -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsTitle" aria-hidden="true"><div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header bg-dark text-white"><h5 class="modal-title" id="settingsTitle">Cài đặt trường tiểu học</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <form id="settingsForm">
+            <div class="modal-body">
+                <label for="setSchoolName" class="fw-bold">Tên trường</label><input type="text" id="setSchoolName" name="schoolName" class="form-control mb-2" required maxlength="255">
+                <label for="setSlogan" class="fw-bold">Slogan</label><input type="text" id="setSlogan" name="slogan" class="form-control mb-2" required maxlength="255">
+                <label for="setContact" class="fw-bold">Liên hệ</label><input type="text" id="setContact" name="contact" class="form-control mb-2" required maxlength="255">
+                <label for="setBanner" class="fw-bold">Ảnh banner (tùy chọn)</label><input type="file" id="setBanner" name="banner" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+                <small class="text-muted">Tối đa 5MB. Để trống nếu không muốn đổi ảnh.</small>
+            </div>
+            <div class="modal-footer"><button type="submit" id="btnSaveSettings" class="btn btn-brand">Lưu cài đặt</button></div>
+        </form>
+    </div></div></div>
+
+    <!-- MODAL: DANH SÁCH GIÁO VIÊN -->
+    <div class="modal fade" id="teachersListModal" tabindex="-1" aria-labelledby="teachersTitle" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header bg-info text-white"><h5 class="modal-title" id="teachersTitle">Danh sách giáo viên</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body"><div class="table-responsive"><table class="table"><thead class="table-light"><tr><th>Họ tên</th><th>Email</th><th>Hành động</th></tr></thead><tbody id="teachersListBody"></tbody></table></div></div>
+    </div></div></div>
+
+    <!-- MODAL: DUYỆT GIÁO VIÊN -->
+    <div class="modal fade" id="pendingTeachersModal" tabindex="-1" aria-labelledby="pendingTitle" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header bg-warning"><h5 class="modal-title" id="pendingTitle">Duyệt hồ sơ giáo viên</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body"><div class="table-responsive"><table class="table"><thead class="table-light"><tr><th>Họ tên</th><th>Email</th><th>Hành động</th></tr></thead><tbody id="pendingTeachersBody"></tbody></table></div></div>
+    </div></div></div>
+
+    <!-- MODAL: QUẢN LÝ LỚP HỌC -->
+    <div class="modal fade" id="classesModal" tabindex="-1" aria-labelledby="classesTitle" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header bg-secondary text-white"><h5 class="modal-title" id="classesTitle">Quản lý lớp học</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <div class="table-responsive mb-3"><table class="table table-sm align-middle"><thead class="table-light"><tr><th>Mã lớp</th><th>Tên lớp</th><th>Giáo viên chủ nhiệm</th><th></th></tr></thead><tbody id="classesBody"></tbody></table></div>
+            <form id="classForm" class="row g-2 align-items-end">
+                <div class="col-sm-3"><label for="clsId" class="form-label small fw-bold mb-1">Mã lớp</label><input type="text" id="clsId" class="form-control form-control-sm" required maxlength="10" pattern="[A-Za-z0-9]{1,10}" placeholder="VD: 1A"></div>
+                <div class="col-sm-3"><label for="clsName" class="form-label small fw-bold mb-1">Tên lớp</label><input type="text" id="clsName" class="form-control form-control-sm" maxlength="100" placeholder="Lớp 1A"></div>
+                <div class="col-sm-4"><label for="clsTeacher" class="form-label small fw-bold mb-1">Giáo viên chủ nhiệm</label><input type="text" id="clsTeacher" class="form-control form-control-sm" maxlength="100" placeholder="Cô Mai"></div>
+                <div class="col-sm-2"><button type="submit" class="btn btn-brand btn-sm w-100">Lưu lớp</button></div>
+            </form>
+            <small class="text-muted d-block mt-2">Nhập mã lớp đã có để sửa thông tin lớp đó.</small>
+        </div>
+    </div></div></div>
+
+    <!-- MODAL: SỬA LỊCH HỌC -->
+    <div class="modal fade" id="editScheduleModal" tabindex="-1" aria-labelledby="editScheduleTitle" aria-hidden="true"><div class="modal-dialog modal-xl"><div class="modal-content">
+        <div class="modal-header bg-danger text-white"><h5 class="modal-title" id="editScheduleTitle">Sửa lịch học</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <div class="table-responsive"><table class="table table-bordered text-center align-middle"><thead class="table-light"><tr><th>Tiết</th><th>Thời gian</th><th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th></th></tr></thead><tbody id="editorTableBody"></tbody></table></div>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="btnAddPeriod"><i class="fa fa-plus"></i> Thêm tiết</button>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-brand" id="btnSaveSchedule">Lưu lịch</button></div>
+    </div></div></div>
+
+    <!-- MODAL: SỬA TÀI LIỆU -->
+    <div class="modal fade" id="editLectureModal" tabindex="-1" aria-labelledby="editLectureTitle" aria-hidden="true"><div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="editLectureTitle">Sửa thông tin tài liệu</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <form id="editLectureForm">
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <label for="editCategory" class="fw-bold">Loại tài liệu</label>
+                <select id="editCategory" class="form-select mb-2"><option value="bai_giang">Bài giảng</option><option value="giao_an">Giáo án</option><option value="de_thi">Đề thi</option><option value="tu_lieu">Tư liệu</option><option value="dao_tao">Đào tạo</option></select>
+                <label for="editTitle" class="fw-bold">Tên tài liệu</label><input type="text" id="editTitle" class="form-control mb-2" required maxlength="255">
+                <div class="row mb-2">
+                    <div class="col-6"><label for="editGrade" class="fw-bold">Khối lớp</label><select id="editGrade" class="form-select"><option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option><option value="4">Khối 4</option><option value="5">Khối 5</option></select></div>
+                    <div class="col-6"><label for="editSubject" class="fw-bold">Môn học</label><select id="editSubject" class="form-select"></select></div>
+                </div>
+                <label for="editDesc" class="fw-bold">Mô tả</label><textarea id="editDesc" class="form-control" rows="2" maxlength="2000"></textarea>
+                <small class="text-muted">Muốn thay file, hãy xóa tài liệu và đăng lại.</small>
+            </div>
+            <div class="modal-footer"><button type="submit" id="btnSaveLecture" class="btn btn-brand">Lưu thay đổi</button></div>
+        </form>
+    </div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="common.js"></script>
+    <script>
+        let currentUser = null;
+        let currentGrade = '', currentCategory = 'bai_giang', currentSubject = '', currentPage = 1;
+        let currentSchedule = [], editorRows = [];
+        let loadSeq = 0, timetableLoaded = false;
+        const lectureCache = new Map();
+
+        const $ = (id) => document.getElementById(id);
+        const isAdmin = () => ['master_admin', 'admin'].includes(currentUser.role);
+        const showModal = (id) => bootstrap.Modal.getOrCreateInstance($(id)).show();
+        const hideModal = (id) => bootstrap.Modal.getOrCreateInstance($(id)).hide();
+
+        // ---------- 1. Cài đặt giao diện trường ----------
+        async function loadSettings() {
+            try {
+                const data = await api('/api/settings');
+                $('schoolName').textContent = data.schoolName || 'Đang cập nhật...';
+                $('schoolSlogan').textContent = data.slogan || '';
+                $('schoolContact').innerHTML = `<i class="fa fa-map-marker-alt"></i> ${escapeHtml(data.contact || 'Đang cập nhật...')}`;
+                document.title = (data.schoolName || 'Cổng Tiểu Học');
+
+                const topBanner = $('topBannerImage'), header = $('headerBanner');
+                const bannerUrl = safeUrl(data.bannerUrl);
+                if (bannerUrl) {
+                    topBanner.style.display = 'block';
+                    topBanner.style.backgroundImage = 'url("' + bannerUrl.replace(/"/g, '%22') + '")';
+                    header.style.borderRadius = '0 0 16px 16px';
+                } else {
+                    topBanner.style.display = 'none';
+                    header.style.borderRadius = '16px';
+                }
+            } catch (e) { if (e.status !== 401) notify('Không tải được thông tin trường: ' + e.message); }
+        }
+
+        async function openSettings() {
+            try {
+                const data = await api('/api/settings');
+                $('setSchoolName').value = data.schoolName || '';
+                $('setSlogan').value = data.slogan || '';
+                $('setContact').value = data.contact || '';
+                $('setBanner').value = '';
+                showModal('settingsModal');
+            } catch (e) { notify(e.message); }
+        }
+
+        // ---------- 2. Người dùng, đăng xuất, nút theo quyền ----------
+        async function logout() {
+            try { await api('/api/auth/logout', { method: 'POST', redirectOn401: false }); } catch (e) { /* vẫn đăng xuất phía client */ }
+            localStorage.clear();
+            location.replace('login.html');
+        }
+
+        function renderUser() {
+            let roleText = '🎒 Phụ huynh / Học sinh';
+            if (currentUser.role === 'teacher') roleText = '👨‍🏫 Giáo viên';
+            if (isAdmin()) roleText = '👑 Hiệu trưởng (quản trị)';
+            $('userNameDisplay').textContent = `${currentUser.name} - ${roleText}`;
+
+            const area = $('headerActionArea');
+            const uploadBtn = '<a href="upload.html" class="btn btn-danger btn-sm rounded-pill shadow-sm"><i class="fa fa-upload"></i> + Tải lên</a>';
+            if (isAdmin()) {
+                area.innerHTML = `
+                    <button type="button" class="btn btn-dark btn-sm rounded-pill shadow-sm" data-act="settings"><i class="fa fa-cogs"></i> Cài đặt</button>
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill shadow-sm" data-act="classes"><i class="fa fa-school"></i> Lớp học</button>
+                    <button type="button" class="btn btn-info btn-sm rounded-pill text-white shadow-sm" data-act="teachers"><i class="fa fa-users"></i> DS giáo viên</button>
+                    <button type="button" class="btn btn-warning btn-sm rounded-pill text-dark shadow-sm" data-act="pending"><i class="fa fa-user-check"></i> Duyệt GV <span id="pendingCountBadge" class="badge bg-danger rounded-pill ms-1 d-none">0</span></button>
+                    ${uploadBtn}`;
+                $('masterAdminEditScheduleBtn').innerHTML = '<button type="button" class="btn btn-danger btn-sm ms-2" id="btnEditSchedule"><i class="fa fa-pencil-alt"></i> Sửa lịch này</button>';
+                checkPendingCount();
+                setInterval(() => { if (!document.hidden) checkPendingCount(); }, 60000);
+            } else if (currentUser.role === 'teacher') {
+                area.innerHTML = uploadBtn;
+            } else {
+                // Học sinh / phụ huynh: server cũng chỉ cho xem mục Bài giảng
+                ['nav-giao-an', 'nav-de-thi', 'nav-tu-lieu', 'nav-dao-tao'].forEach((id) => $(id).classList.add('d-none'));
+            }
+        }
+
+        // ---------- 3. Tài liệu ----------
+        function lectureCard(item) {
+            const canManage = isAdmin() || (currentUser.role === 'teacher' && item.author_id === currentUser.id);
+            const id = Number(item.id);
+            return `<div class="col-md-6 mb-3"><div class="card p-3 border-0 shadow-sm h-100">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-primary">Khối ${escapeHtml(item.grade)}</span>
+                    <span class="badge bg-dark">${escapeHtml(CATEGORY_LABELS[item.category_type] || item.category_type)}</span>
+                </div>
+                <h3 class="h6 fw-bold text-truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h3>
+                <small class="text-secondary d-block"><i class="fa fa-user"></i> ${escapeHtml(item.author_name)}</small>
+                <small class="text-secondary d-block mb-3"><i class="fa fa-book"></i> ${escapeHtml(item.subject)}</small>
+                <div class="d-flex gap-2 mt-auto">
+                    <a href="view.html?id=${id}" class="btn btn-sm btn-outline-primary flex-grow-1">Xem chi tiết</a>
+                    ${canManage ? `<button type="button" class="btn btn-sm btn-outline-secondary" data-action="edit" data-id="${id}">Sửa</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${id}">Xóa</button>` : ''}
+                </div>
+            </div></div>`;
+        }
+
+        async function loadLectures() {
+            const seq = ++loadSeq; // bỏ qua kết quả cũ nếu đã có yêu cầu mới hơn
+            const params = new URLSearchParams({ page: currentPage, limit: 12, category_type: currentCategory });
+            if (currentGrade) params.set('grade', currentGrade);
+            if (currentSubject) params.set('subject', currentSubject);
+            const q = $('searchInput').value.trim();
+            if (q) params.set('search', q);
+            const grid = $('lectureGrid');
+            try {
+                const data = await api('/api/lectures?' + params.toString());
+                if (seq !== loadSeq) return;
+                if (data.items.length === 0 && currentPage > 1) { currentPage = data.pages; return loadLectures(); }
+                lectureCache.clear();
+                data.items.forEach((it) => lectureCache.set(Number(it.id), it));
+                grid.innerHTML = data.items.length
+                    ? data.items.map(lectureCard).join('')
+                    : '<div class="col-12 text-center text-muted py-4">Chưa có tài liệu phù hợp trong mục này.</div>';
+                renderPager(data);
+            } catch (e) {
+                if (seq !== loadSeq || e.status === 401) return;
+                grid.innerHTML = `<div class="col-12 text-center text-danger py-4">${escapeHtml(e.message)}</div>`;
+                $('pager').innerHTML = '';
+            }
+        }
+
+        function renderPager(data) {
+            if (data.total === 0) { $('pager').innerHTML = ''; return; }
+            $('pager').innerHTML = `
+                <small class="text-muted">${data.total} tài liệu - trang ${data.page}/${data.pages}</small>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-page="${data.page - 1}" ${data.page <= 1 ? 'disabled' : ''}>&laquo; Trước</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-page="${data.page + 1}" ${data.page >= data.pages ? 'disabled' : ''}>Sau &raquo;</button>
+                </div>`;
+        }
+
+        async function deleteLecture(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa tài liệu này? Tệp đính kèm cũng sẽ bị xóa.')) return;
+            try {
+                await api(`/api/lectures/${id}`, { method: 'DELETE' });
+                notify('Đã xóa tài liệu.', 'success', 3000);
+                loadLectures();
+            } catch (e) { notify(e.message); }
+        }
+
+        function openEditLecture(id) {
+            const it = lectureCache.get(id);
+            if (!it) return;
+            $('editId').value = id;
+            $('editCategory').value = it.category_type;
+            $('editTitle').value = it.title;
+            $('editGrade').value = it.grade;
+            $('editSubject').value = it.subject;
+            $('editDesc').value = it.description || '';
+            showModal('editLectureModal');
+        }
+
+        function setGrade(g, el) {
+            currentGrade = g; currentPage = 1;
+            document.querySelectorAll('#gradeGroup button').forEach((b) => b.classList.remove('active'));
+            el.classList.add('active');
+            loadLectures();
+        }
+        function switchCategory(cat, el) {
+            currentCategory = cat; currentPage = 1;
+            document.querySelectorAll('#mainNav .nav-link').forEach((b) => b.classList.remove('active'));
+            el.classList.add('active');
+            $('sec-library').classList.remove('d-none');
+            $('sec-timetable').classList.add('d-none');
+            loadLectures();
+        }
+        function switchTab(el) {
+            document.querySelectorAll('#mainNav .nav-link').forEach((b) => b.classList.remove('active'));
+            el.classList.add('active');
+            $('sec-library').classList.add('d-none');
+            $('sec-timetable').classList.remove('d-none');
+            if (!timetableLoaded) { timetableLoaded = true; loadClasses(); }
+        }
+
+        // ---------- 4. Lớp học & thời khóa biểu ----------
+        async function loadClasses(keepValue) {
+            const sel = $('classSelect');
+            try {
+                const classes = await api('/api/classes');
+                sel.innerHTML = classes.map((c) =>
+                    `<option value="${escapeHtml(c.class_id)}">${escapeHtml(c.class_name)}${c.teacher_name ? ' - ' + escapeHtml(c.teacher_name) : ''}</option>`).join('');
+                if (!classes.length) {
+                    $('scheduleBody').innerHTML = '<tr><td colspan="7" class="text-muted">Chưa có lớp nào. Quản trị viên có thể thêm lớp trong mục "Lớp học".</td></tr>';
+                    return classes;
+                }
+                if (keepValue && classes.some((c) => c.class_id === keepValue)) sel.value = keepValue;
+                loadSchedule(sel.value);
+                return classes;
+            } catch (e) { notify(e.message); return []; }
+        }
+
+        async function loadSchedule(classId) {
+            const body = $('scheduleBody');
+            try {
+                currentSchedule = await api(`/api/timetable/${encodeURIComponent(classId)}`);
+                body.innerHTML = currentSchedule.map((row) =>
+                    `<tr><td><b>${escapeHtml(row.period)}</b></td><td>${escapeHtml(row.time)}</td><td>${escapeHtml(row.t2)}</td><td>${escapeHtml(row.t3)}</td><td>${escapeHtml(row.t4)}</td><td>${escapeHtml(row.t5)}</td><td>${escapeHtml(row.t6)}</td></tr>`).join('');
+            } catch (e) {
+                currentSchedule = [];
+                body.innerHTML = `<tr><td colspan="7" class="text-danger">${escapeHtml(e.message)}</td></tr>`;
+            }
+        }
+
+        const SCHEDULE_FIELDS = ['period', 'time', 't2', 't3', 't4', 't5', 't6'];
+        function renderEditor() {
+            $('editorTableBody').innerHTML = editorRows.map((row, i) =>
+                '<tr>' + SCHEDULE_FIELDS.map((f) =>
+                    `<td><input type="text" class="form-control form-control-sm" maxlength="60" data-i="${i}" data-f="${f}" value="${escapeHtml(row[f])}" aria-label="${f} dòng ${i + 1}"></td>`).join('') +
+                `<td><button type="button" class="btn btn-outline-danger btn-sm" data-del="${i}" aria-label="Xóa tiết ${i + 1}"><i class="fa fa-trash"></i></button></td></tr>`).join('');
+        }
+        function openScheduleEditor() {
+            editorRows = currentSchedule.map((r) => ({ ...r }));
+            renderEditor();
+            showModal('editScheduleModal');
+        }
+        async function saveSchedule() {
+            const classId = $('classSelect').value;
+            if (!classId) return;
+            if (!editorRows.length) { notify('Thời khóa biểu cần ít nhất một tiết.'); return; }
+            const btn = $('btnSaveSchedule');
+            setBusy(btn, true, 'Đang lưu...');
+            try {
+                await api(`/api/timetable/${encodeURIComponent(classId)}`, { method: 'POST', json: { schedule: editorRows } });
+                hideModal('editScheduleModal');
+                notify('Đã lưu thời khóa biểu.', 'success', 3000);
+                loadSchedule(classId);
+            } catch (e) { notify(e.message); }
+            setBusy(btn, false);
+        }
+
+        async function openClasses() {
+            showModal('classesModal');
+            await renderClassesTable();
+        }
+        async function renderClassesTable() {
+            try {
+                const classes = await api('/api/classes');
+                $('classesBody').innerHTML = classes.length ? classes.map((c) => `<tr>
+                    <td>${escapeHtml(c.class_id)}</td><td>${escapeHtml(c.class_name)}</td><td>${escapeHtml(c.teacher_name)}</td>
+                    <td class="text-end text-nowrap">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-edit-class="${escapeHtml(c.class_id)}" data-name="${escapeHtml(c.class_name)}" data-teacher="${escapeHtml(c.teacher_name)}">Sửa</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-del-class="${escapeHtml(c.class_id)}">Xóa</button>
+                    </td></tr>`).join('') : '<tr><td colspan="4" class="text-center text-muted">Chưa có lớp nào.</td></tr>';
+            } catch (e) { notify(e.message); }
+        }
+
+        // ---------- 5. Quản trị giáo viên ----------
+        async function checkPendingCount() {
+            try {
+                const list = await api('/api/admin/pending-teachers');
+                const badge = $('pendingCountBadge');
+                if (!badge) return;
+                badge.textContent = list.length;
+                badge.classList.toggle('d-none', list.length === 0);
+            } catch (e) { /* bỏ qua lỗi nền */ }
+        }
+
+        async function loadAllTeachers() {
+            const tbody = $('teachersListBody');
+            try {
+                const list = await api('/api/admin/teachers');
+                tbody.innerHTML = list.length ? list.map((t) => `<tr><td>${escapeHtml(t.full_name)}</td><td>${escapeHtml(t.email)}</td>
+                    <td><button type="button" class="btn btn-outline-danger btn-sm" data-teacher="${Number(t.id)}" data-act="delete">Xóa</button></td></tr>`).join('')
+                    : '<tr><td colspan="3" class="text-center text-muted">Chưa có giáo viên nào.</td></tr>';
+            } catch (e) { notify(e.message); }
+        }
+
+        async function loadPendingTeachers() {
+            const tbody = $('pendingTeachersBody');
+            try {
+                const list = await api('/api/admin/pending-teachers');
+                tbody.innerHTML = list.length ? list.map((t) => `<tr><td>${escapeHtml(t.full_name)}</td><td>${escapeHtml(t.email)}</td>
+                    <td class="text-nowrap"><button type="button" class="btn btn-success btn-sm me-1" data-teacher="${Number(t.id)}" data-act="approve">Duyệt</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-teacher="${Number(t.id)}" data-act="reject">Từ chối</button></td></tr>`).join('')
+                    : '<tr><td colspan="3" class="text-center text-muted">Không có hồ sơ nào chờ duyệt.</td></tr>';
+            } catch (e) { notify(e.message); }
+        }
+
+        async function manageTeacher(id, action) {
+            if (action === 'delete' && !confirm('Bạn có chắc chắn muốn xóa giáo viên này?')) return;
+            if (action === 'reject' && !confirm('Từ chối và xóa hồ sơ đăng ký này?')) return;
+            try {
+                if (action === 'delete') {
+                    await api('/api/admin/delete-teacher', { method: 'POST', json: { teacher_id: id } });
+                    loadAllTeachers();
+                } else {
+                    await api('/api/admin/manage-teacher', { method: 'POST', json: { teacher_id: id, action } });
+                    loadPendingTeachers();
+                }
+                checkPendingCount();
+            } catch (e) { notify(e.message); }
+        }
+
+        // ---------- 6. Gắn sự kiện ----------
+        function bindEvents() {
+            $('btnLogout').addEventListener('click', logout);
+
+            $('mainNav').addEventListener('click', (e) => {
+                const btn = e.target.closest('button.nav-link');
+                if (!btn) return;
+                if (btn.dataset.tab) switchTab(btn); else switchCategory(btn.dataset.category, btn);
+            });
+            $('gradeGroup').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-grade]');
+                if (btn) setGrade(btn.dataset.grade, btn);
+            });
+            $('subjectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });
+            $('searchInput').addEventListener('input', debounce(() => { currentPage = 1; loadLectures(); }, 350));
+            $('pager').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-page]');
+                if (btn && !btn.disabled) { currentPage = Number(btn.dataset.page); loadLectures(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+            });
+            $('lectureGrid').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const id = Number(btn.dataset.id);
+                if (btn.dataset.action === 'edit') openEditLecture(id); else deleteLecture(id);
+            });
+
+            $('headerActionArea').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-act]');
+                if (!btn) return;
+                if (btn.dataset.act === 'settings') openSettings();
+                if (btn.dataset.act === 'classes') openClasses();
+                if (btn.dataset.act === 'teachers') { showModal('teachersListModal'); loadAllTeachers(); }
+                if (btn.dataset.act === 'pending') { showModal('pendingTeachersModal'); loadPendingTeachers(); }
+            });
+            ['teachersListBody', 'pendingTeachersBody'].forEach((id) => $(id).addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-teacher]');
+                if (btn) manageTeacher(Number(btn.dataset.teacher), btn.dataset.act);
+            }));
+
+            $('settingsForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const file = $('setBanner').files[0];
+                if (file && file.size > 5 * 1024 * 1024) { notify('Ảnh banner vượt quá 5MB.'); return; }
+                const btn = $('btnSaveSettings');
+                setBusy(btn, true, 'Đang lưu...');
+                try {
+                    await api('/api/settings', { method: 'POST', form: new FormData(e.target) });
+                    hideModal('settingsModal');
+                    notify('Đã lưu cài đặt.', 'success', 3000);
+                    loadSettings();
+                } catch (err) { notify(err.message); }
+                setBusy(btn, false);
+            });
+
+            $('editLectureForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = $('btnSaveLecture');
+                setBusy(btn, true, 'Đang lưu...');
+                try {
+                    await api(`/api/lectures/${$('editId').value}`, {
+                        method: 'PUT',
+                        json: { title: $('editTitle').value, description: $('editDesc').value, grade: $('editGrade').value, subject: $('editSubject').value, category_type: $('editCategory').value }
+                    });
+                    hideModal('editLectureModal');
+                    notify('Đã cập nhật tài liệu.', 'success', 3000);
+                    loadLectures();
+                } catch (err) { notify(err.message); }
+                setBusy(btn, false);
+            });
+
+            $('classSelect').addEventListener('change', (e) => loadSchedule(e.target.value));
+            document.addEventListener('click', (e) => { if (e.target.closest('#btnEditSchedule')) openScheduleEditor(); });
+            $('btnSaveSchedule').addEventListener('click', saveSchedule);
+            $('btnAddPeriod').addEventListener('click', () => {
+                if (editorRows.length >= 15) { notify('Tối đa 15 tiết.'); return; }
+                editorRows.push({ period: `Tiết ${editorRows.length + 1}`, time: '', t2: '', t3: '', t4: '', t5: '', t6: '' });
+                renderEditor();
+            });
+            $('editorTableBody').addEventListener('input', (e) => {
+                const inp = e.target.closest('input[data-i]');
+                if (inp) editorRows[Number(inp.dataset.i)][inp.dataset.f] = inp.value;
+            });
+            $('editorTableBody').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-del]');
+                if (btn) { editorRows.splice(Number(btn.dataset.del), 1); renderEditor(); }
+            });
+
+            $('classForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    await api('/api/classes', { method: 'POST', json: { class_id: $('clsId').value, class_name: $('clsName').value, teacher_name: $('clsTeacher').value } });
+                    const savedId = $('clsId').value.trim().toUpperCase();
+                    e.target.reset();
+                    notify('Đã lưu lớp học.', 'success', 3000);
+                    await renderClassesTable();
+                    if (timetableLoaded) loadClasses($('classSelect').value || savedId);
+                } catch (err) { notify(err.message); }
+            });
+            $('classesBody').addEventListener('click', async (e) => {
+                const edit = e.target.closest('button[data-edit-class]');
+                if (edit) {
+                    $('clsId').value = edit.dataset.editClass; $('clsName').value = edit.dataset.name; $('clsTeacher').value = edit.dataset.teacher;
+                    $('clsName').focus();
+                    return;
+                }
+                const del = e.target.closest('button[data-del-class]');
+                if (del && confirm(`Xóa lớp ${del.dataset.delClass} cùng thời khóa biểu của lớp?`)) {
+                    try {
+                        await api(`/api/classes/${encodeURIComponent(del.dataset.delClass)}`, { method: 'DELETE' });
+                        await renderClassesTable();
+                        if (timetableLoaded) loadClasses();
+                    } catch (err) { notify(err.message); }
+                }
+            });
+        }
+
+        // ---------- Khởi động ----------
+        (async function init() {
+            currentUser = await requireUser();
+            if (!currentUser) return; // đã được chuyển về trang đăng nhập
+            $('subjectFilter').innerHTML = '<option value="">Tất cả môn học</option>' + optionsHtml(SUBJECTS);
+            $('editSubject').innerHTML = optionsHtml(SUBJECTS);
+            renderUser();
+            bindEvents();
+            loadSettings();
+            loadLectures();
+        })();
+    </script>
+</body>
+</html>
