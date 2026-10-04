@@ -518,15 +518,6 @@ app.post('/api/timetable/:classId', verifyToken, requireAdmin, wrap(async (req, 
     for (const row of input) { if (!row || typeof row !== 'object') return res.status(400).json({ error: 'Dữ liệu thời khóa biểu không hợp lệ.' }); const clean = {}; for (const f of fields) { const v = cleanStr(row[f]); if (v.length > 60) return res.status(400).json({ error: 'Mỗi ô tối đa 60 ký tự.' }); clean[f] = v; } schedule.push(clean); }
     await pool.query('INSERT INTO timetable (class_id, schedule) VALUES ($1, $2) ON CONFLICT (class_id) DO UPDATE SET schedule = EXCLUDED.schedule', [classId, JSON.stringify(schedule)]); res.json({ message: 'Lưu lịch thành công!' });
 }));
-
-app.use('/api', (req, res) => res.status(404).json({ error: 'Không tìm thấy đường dẫn.' }));
-app.use((err, req, res, next) => {
-    if (res.headersSent) return next(err);
-    if (err instanceof multer.MulterError) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'File vượt quá dung lượng cho phép.' : 'Lỗi khi tải file lên.' });
-    if (err.isHttp) return res.status(err.status).json({ error: err.message });
-    if (err.type === 'entity.parse.failed' || err.type === 'entity.too.large') return res.status(400).json({ error: 'Dữ liệu gửi lên không hợp lệ.' });
-    console.error('Lỗi máy chủ:', err); res.status(500).json({ error: 'Lỗi máy chủ. Vui lòng thử lại sau.' });
-});
 // =========================================================
 // THÊM MỚI: API Xóa đánh giá (Chỉ dành cho Admin)
 // =========================================================
@@ -554,6 +545,15 @@ app.delete('/api/lectures/:id/reviews/:reviewId', verifyToken, requireAdmin, wra
     
     res.json({ message: 'Đã xóa đánh giá thành công!' });
 }));
+app.use('/api', (req, res) => res.status(404).json({ error: 'Không tìm thấy đường dẫn.' }));
+app.use((err, req, res, next) => {
+    if (res.headersSent) return next(err);
+    if (err instanceof multer.MulterError) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'File vượt quá dung lượng cho phép.' : 'Lỗi khi tải file lên.' });
+    if (err.isHttp) return res.status(err.status).json({ error: err.message });
+    if (err.type === 'entity.parse.failed' || err.type === 'entity.too.large') return res.status(400).json({ error: 'Dữ liệu gửi lên không hợp lệ.' });
+    console.error('Lỗi máy chủ:', err); res.status(500).json({ error: 'Lỗi máy chủ. Vui lòng thử lại sau.' });
+});
+
 process.on('unhandledRejection', (e) => console.error('Unhandled rejection:', e));
 initDB().then(() => { app.listen(PORT, async () => {
     console.log(`>>> Máy chủ chạy tại: http://localhost:${PORT}`);
