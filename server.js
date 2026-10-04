@@ -527,7 +527,33 @@ app.use((err, req, res, next) => {
     if (err.type === 'entity.parse.failed' || err.type === 'entity.too.large') return res.status(400).json({ error: 'Dữ liệu gửi lên không hợp lệ.' });
     console.error('Lỗi máy chủ:', err); res.status(500).json({ error: 'Lỗi máy chủ. Vui lòng thử lại sau.' });
 });
-
+// =========================================================
+// THÊM MỚI: API Xóa đánh giá (Chỉ dành cho Admin)
+// =========================================================
+app.delete('/api/lectures/:id/reviews/:reviewId', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const lectureId = toInt(req.params.id);
+    const reviewId = toInt(req.params.reviewId);
+    
+    if (!lectureId || !reviewId) {
+        return res.status(400).json({ error: 'Đường dẫn không hợp lệ.' });
+    }
+    
+    // Xóa đánh giá khỏi Database
+    const result = await pool.query('DELETE FROM reviews WHERE id = $1 AND lecture_id = $2', [reviewId, lectureId]);
+    
+    if (!result.rowCount) {
+        return res.status(404).json({ error: 'Không tìm thấy đánh giá (hoặc đã bị xóa trước đó).' });
+    }
+    
+    // Tính toán và cập nhật lại điểm đánh giá trung bình cho tài liệu
+    // Nếu bị xóa hết đánh giá (không còn sao nào), điểm sẽ tự động quay về mức mặc định là 5.0
+    await pool.query(
+        'UPDATE lectures SET avg_rating = COALESCE((SELECT ROUND(AVG(stars)::numeric, 1) FROM reviews WHERE lecture_id = $1), 5.0) WHERE id = $1', 
+        [lectureId]
+    );
+    
+    res.json({ message: 'Đã xóa đánh giá thành công!' });
+}));
 process.on('unhandledRejection', (e) => console.error('Unhandled rejection:', e));
 initDB().then(() => { app.listen(PORT, async () => {
     console.log(`>>> Máy chủ chạy tại: http://localhost:${PORT}`);
