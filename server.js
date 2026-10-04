@@ -434,7 +434,7 @@ app.get('/api/lectures/:id', verifyToken, wrap(async (req, res) => {
     if (!isStaff(req.user)) { params.push(STUDENT_CATEGORIES); extra += ' AND category_type = ANY($2)'; }
     const sql = countView ? `UPDATE lectures SET views_count = views_count + 1 WHERE id = $1${extra} RETURNING *` : `SELECT * FROM lectures WHERE id = $1${extra}`;
     const { rows } = await pool.query(sql, params); if (!rows[0]) return res.status(404).json({ error: 'Không tìm thấy tài liệu (hoặc đã bị đưa vào thùng rác).' });
-    const revs = await pool.query(`SELECT r.author_name AS author, r.stars, r.comment, to_char(r.created_at, 'DD/MM/YYYY') AS created_at, (r.user_id = $2) AS mine FROM reviews r WHERE r.lecture_id = $1 ORDER BY r.created_at DESC, r.id DESC`, [id, req.user.id]);
+    const revs = await pool.query(`SELECT r.id, r.author_name AS author, r.stars, r.comment, to_char(r.created_at, 'DD/MM/YYYY') AS created_at, (r.user_id = $2) AS mine FROM reviews r WHERE r.lecture_id = $1 ORDER BY r.created_at DESC, r.id DESC`, [id, req.user.id]);
     const lecture = rows[0]; lecture.ratings = revs.rows.map(({ mine, ...r }) => r); lecture.already_reviewed = revs.rows.some((r) => r.mine); lecture.can_manage = canManageLecture(req.user, lecture); res.json(lecture);
 }));
 
