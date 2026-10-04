@@ -65,40 +65,42 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bs-body-bg
 .banner-edit { border-radius: 12px; cursor: grab; touch-action: none; user-select: none; }
 .banner-edit.dragging { cursor: grabbing; }
 .modal-dialog.modal-wide { --bs-modal-width: min(1500px, 96vw); }
-/* ================= TÙY CHỈNH RESPONSIVE CHO ĐIỆN THOẠI (APP) ================= */
+/* ================= TÙY CHỈNH CHO APP ĐIỆN THOẠI (MOBILE & APK) ================= */
+/* 1. Ngăn bôi đen văn bản (tránh ấn nhầm khi dùng cảm ứng) */
+body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+/* Cho phép bôi đen trong các ô nhập liệu và khu vực văn bản dài */
+input, textarea, select, #descDisplay, .form-control {
+    -webkit-user-select: auto;
+    user-select: auto;
+}
+
+/* 2. Thu nhỏ Header màu xanh trên màn hình điện thoại */
 @media (max-width: 768px) {
-    /* 1. Thu nhỏ khoảng trống thừa xung quanh bảng màu xanh */
     #headerBanner {
         padding: 12px 15px !important;
     }
-    
-    /* 2. Giảm khoảng cách (gap) giữa nút Menu, Logo và cụm Text */
     #headerBanner > .d-flex > .d-flex {
         gap: 12px !important; 
     }
-
-    /* 3. Tự động thu nhỏ Logo */
     #schoolLogo {
-        height: 50px !important; /* Mặc định trên máy tính là 72px */
+        height: 50px !important;
     }
-    
-    /* Thu nhỏ Emoji Logo (nếu không dùng ảnh) */
     #schoolLogoText {
         font-size: 2rem !important; 
     }
-
-    /* 4. Tự động thu nhỏ Tên trường, Slogan và Địa chỉ liên hệ */
     #schoolName {
-        font-size: 1.1rem !important; /* Chữ nhỏ lại một chút để đỡ rớt dòng */
+        font-size: 1.1rem !important;
         line-height: 1.3 !important;
     }
-    
     #schoolSlogan {
-        font-size: 0.75rem !important; /* Cỡ chữ nhỏ gọn hơn */
+        font-size: 0.75rem !important;
         line-height: 1.2 !important;
         margin-top: 4px !important;
     }
-    
     #schoolContact {
         font-size: 0.75rem !important;
         line-height: 1.2 !important;

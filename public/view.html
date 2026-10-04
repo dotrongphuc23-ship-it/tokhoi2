@@ -76,6 +76,10 @@
         const lectureId = new URLSearchParams(location.search).get('id');
         let currentStars = 5;
 
+        // THÊM MỚI: Quản lý user hiện tại và kiểm tra Admin
+        let currentUser = null;
+        const isAdmin = () => currentUser && ['master_admin', 'admin'].includes(currentUser.role);
+
         function setStars(n) {
             currentStars = n;
             document.querySelectorAll('#starPicker i').forEach((s, idx) => {
@@ -128,18 +132,33 @@
             }
         }
 
+        // ĐÃ SỬA: Hiển thị thêm nút xóa nếu là Admin
         function renderReviews(ratings) {
             const list = document.getElementById('reviewsList');
             if (!ratings || !ratings.length) { list.innerHTML = '<p class="text-muted small mb-0">Chưa có đánh giá nào.</p>'; return; }
             list.innerHTML = ratings.map((r) => `
-                <div class="border-bottom pb-2 mb-2">
-                    <div class="d-flex justify-content-between">
-                        <b class="text-dark small"><i class="fa fa-user-circle me-1"></i> ${escapeHtml(r.author)}</b>
-                        <span class="text-muted small">${escapeHtml(r.created_at)}</span>
+                <div class="border-bottom pb-2 mb-2 position-relative">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <b class="text-dark small"><i class="fa fa-user-circle me-1"></i> ${escapeHtml(r.author)}</b>
+                            <span class="text-muted small ms-2">${escapeHtml(r.created_at)}</span>
+                            <div class="text-warning small mt-1">${'⭐'.repeat(Math.min(5, Math.max(0, Number(r.stars) || 0)))}</div>
+                        </div>
+                        ${isAdmin() ? `<button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-bold" onclick="deleteReview(${r.id})" title="Xóa đánh giá này"><i class="fa fa-trash"></i></button>` : ''}
                     </div>
-                    <div class="text-warning small">${'⭐'.repeat(Math.min(5, Math.max(0, Number(r.stars) || 0)))}</div>
-                    <p class="mb-0 small text-secondary" style="white-space: pre-wrap;">${escapeHtml(r.comment)}</p>
+                    <p class="mb-0 small text-secondary mt-2" style="white-space: pre-wrap;">${escapeHtml(r.comment)}</p>
                 </div>`).join('');
+        }
+
+        // THÊM MỚI: Hàm gọi API xóa đánh giá
+        function deleteReview(reviewId) {
+            showConfirm('Xóa đánh giá', 'Bạn có chắc chắn muốn xóa đánh giá này?', async () => {
+                try {
+                    await api(`/api/lectures/${encodeURIComponent(lectureId)}/reviews/${encodeURIComponent(reviewId)}`, { method: 'DELETE' });
+                    notify('Đã xóa đánh giá.', 'success', 3000);
+                    await loadLectureDetail(false);
+                } catch (err) { notify(err.message); }
+            });
         }
 
         async function loadLectureDetail(countView = true) {
@@ -196,9 +215,12 @@
 
         (async function init() {
             if (!lectureId) { location.replace('index.html'); return; }
-            const user = await requireUser();
-            if (!user) return;
-            document.getElementById('userBadge').textContent = `Xin chào, ${user.name}`;
+            
+            // ĐÃ SỬA: Lấy thông tin User để gán vào biến currentUser đã khai báo ở trên
+            currentUser = await requireUser();
+            if (!currentUser) return;
+            
+            document.getElementById('userBadge').textContent = `Xin chào, ${currentUser.name}`;
             setStars(5);
             loadLectureDetail(true);
         })();

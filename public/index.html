@@ -12,8 +12,9 @@
 <body>
     <div class="container-xl px-md-4 mt-4 mb-3">
         <div id="topBannerImage" class="banner-frame shadow-sm" role="img" aria-label="Ảnh bìa" style="display: none;"><img id="bannerImg" alt="" draggable="false"></div>
-        <!-- THÊM position-relative và z-index: 1050 ĐỂ KHÔNG BỊ THANH TÌM KIẾM ĐÈ LÊN -->
-        <header id="headerBanner" class="shadow-sm border position-relative" style="background-color: #60A5FA; padding: 20px 30px; border-bottom: 5px solid var(--accent) !important; border-radius: 20px; z-index: 1030;">
+        
+        <!-- ĐÃ SỬA: z-index: 1030 và padding: 15px 20px để tối ưu cho Mobile App, tránh đè Menu -->
+        <header id="headerBanner" class="shadow-sm border position-relative" style="background-color: #60A5FA; padding: 15px 20px; border-bottom: 5px solid var(--accent) !important; border-radius: 20px; z-index: 1030;">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
                     <button class="btn btn-outline-light d-lg-none rounded-circle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
@@ -26,9 +27,9 @@
                         <!-- Tên trường: Màu vàng -->
                         <h1 class="h4 fw-bold mb-0 text-uppercase" style="color: #FFEA00 !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.2);" id="schoolName">Đang tải...</h1>
                         <!-- Slogan: Màu đỏ (kèm viền sáng nhẹ để không bị chìm trên nền xanh) -->
-                        <h1 class="small text-danger fw-bold mt-1" id="schoolSlogan" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.7);"></h1>
+                        <div class="small text-danger fw-bold mt-1" id="schoolSlogan" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.7);"></div>
                         <!-- Địa chỉ: Màu trắng in đậm -->
-                        <div class="text-white fw-bold" id="schoolContact" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.3);"></div>
+                        <div class="text-white fw-bold mt-1" id="schoolContact" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.3);"></div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-3" id="headerActionArea">
@@ -156,7 +157,6 @@
         <div class="modal-header border-bottom"><h5 class="modal-title fw-bold"><i class="fa fa-cog text-secondary me-2"></i> Cài đặt trường</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <form id="settingsForm">
             <div class="modal-body">
-                <!-- THÊM Ô NHẬP URL LOGO -->
                 <label class="fw-bold mb-1">URL Hình ảnh Logo (Tùy chọn)</label><input type="url" id="setLogoUrl" name="logoUrl" class="form-control bg-body-tertiary mb-3 border-0" placeholder="https://...">
                 
                 <label class="fw-bold mb-1">Tên trường</label><input type="text" id="setSchoolName" name="schoolName" class="form-control bg-body-tertiary mb-3 border-0" required maxlength="255">
@@ -311,7 +311,7 @@
             let roleText = '🎒 Phụ huynh / Học sinh', nameDisplay = currentUser.name || 'Người dùng';
             const isManager = isAdmin() || currentUser.can_manage_docs;
             
-            if (currentUser.role === 'teacher') roleText = '👨‍🏫 Giáo viên';
+            if (currentUser.role === 'teacher') roleText = '👨‍‍🏫 Giáo viên';
             if (isAdmin()) { roleText = '👑 Quản trị viên';nameDisplay = 'Đỗ Ngọc Thương'; }
 
             $('userMenuArea').innerHTML = `
@@ -433,7 +433,7 @@
             } catch (e) {
                 if (seq !== loadSeq || e.status === 401) return;
                 grid.classList.remove('is-loading');
-                grid.innerHTML = emptyStateHtml('⚠️️', 'Lỗi tải dữ liệu', escapeHtml(e.message));
+                grid.innerHTML = emptyStateHtml('⚠', 'Lỗi tải dữ liệu', escapeHtml(e.message));
                 $('pager').innerHTML = '';
             }
         }
@@ -676,30 +676,23 @@
 
         function bindEvents() {
             $('mainNav').addEventListener('click', (e) => { const btn = e.target.closest('button.nav-link'); if (!btn) return; if (btn.dataset.tab) switchTab(btn); else switchCategory(btn.dataset.category, btn); });
-            $('gradeFilter').addEventListener('change', (e) => { currentGrade = e.target.value; currentPage = 1; loadLectures(); });
-            $('albumSelectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });
-            $('subjectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });
-            $('searchInput').addEventListener('input', debounce(() => { currentPage = 1; loadLectures(); }, 350));
-            $('pager').addEventListener('click', (e) => { const btn = e.target.closest('button[data-page]'); if (btn && !btn.disabled) { currentPage = Number(btn.dataset.page); loadLectures(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
-            
-            $('lectureGrid').addEventListener('click', (e) => { const btn = e.target.closest('button[data-action]'); if (btn) btn.dataset.action === 'edit' ? openEditLecture(Number(btn.dataset.id)) : deleteLecture(Number(btn.dataset.id)); });
+            $('gradeFilter').addEventListener('change', (e) => { currentGrade = e.target.value; currentPage = 1; loadLectures(); });$('albumSelectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });
+            $('subjectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });$('searchInput').addEventListener('input', debounce(() => { currentPage = 1; loadLectures(); }, 350));
+            $('pager').addEventListener('click', (e) => { const btn = e.target.closest('button[data-page]'); if (btn && !btn.disabled) { currentPage = Number(btn.dataset.page); loadLectures(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });$('lectureGrid').addEventListener('click', (e) => { const btn = e.target.closest('button[data-action]'); if (btn) btn.dataset.action === 'edit' ? openEditLecture(Number(btn.dataset.id)) : deleteLecture(Number(btn.dataset.id)); });
             $('lectureGrid').addEventListener('change', (e) => { if (e.target.classList.contains('lecture-checkbox')) { if (e.target.checked) checkedIds.add(Number(e.target.value)); else checkedIds.delete(Number(e.target.value)); updateBulkBar(); } });
-            $('btnCancelBulk').addEventListener('click', () => { checkedIds.clear(); document.querySelectorAll('.lecture-checkbox').forEach(cb => cb.checked = false); updateBulkBar(); });
-            $('btnDeleteBulk').addEventListener('click', () => {
+            $('btnCancelBulk').addEventListener('click', () => { checkedIds.clear(); document.querySelectorAll('.lecture-checkbox').forEach(cb => cb.checked = false); updateBulkBar(); });$('btnDeleteBulk').addEventListener('click', () => {
                 showConfirm('Xóa hàng loạt', `Chuyển ${checkedIds.size} tài liệu đã chọn vào Thùng rác?`, async () => {
                     const btn = $('btnDeleteBulk'); setBusy(btn, true, 'Đang xử lý...');
                     try { await api('/api/lectures/multi-delete', { method: 'POST', json: { ids: Array.from(checkedIds) } }); notify('Đã chuyển vào thùng rác thành công.', 'success', 3000); checkedIds.clear(); updateBulkBar(); loadLectures(); loadAlbums(); } catch(e) { notify(e.message); } setBusy(btn, false);
                 });
             });
             
-            $('btnThemeToggle').addEventListener('click', toggleTheme);
-            
-            $('userMenuArea').addEventListener('click', (e) => {
+            $('btnThemeToggle').addEventListener('click', toggleTheme);$('userMenuArea').addEventListener('click', (e) => {
                 const btn = e.target.closest('button[data-act]'); if (!btn) return;
                 if (btn.dataset.act === 'settings') openSettings();
                 if (btn.dataset.act === 'classes') openClasses();
                 if (btn.dataset.act === 'teachers') { showModal('teachersListModal'); loadAllTeachers(); startPresenceRefresh(loadAllTeachers); }
-                if (btn.dataset.act === 'students') { studentPage = 1; $('studentSearch').value = ''; $('studentsListBody').innerHTML = ''; $('studentsPager').innerHTML = ''; showModal('studentsListModal'); loadStudents(); startPresenceRefresh(loadStudents); }
+                if (btn.dataset.act === 'students') { studentPage = 1; $('studentSearch').value = ''; $('studentsListBody').innerHTML = '';$('studentsPager').innerHTML = ''; showModal('studentsListModal'); loadStudents(); startPresenceRefresh(loadStudents); }
                 if (btn.dataset.act === 'pending') { showModal('pendingTeachersModal'); loadPendingTeachers(); }
                 if (btn.dataset.act === 'trash') { showModal('trashModal'); loadTrash(); }
             });
@@ -708,10 +701,8 @@
             bindBannerEditor();
             
             $('studentSearch').addEventListener('input', debounce(() => { studentPage = 1; loadStudents(); }, 350));
-            $('studentsPager').addEventListener('click', (e) => { const btn = e.target.closest('button[data-page]'); if (btn && !btn.disabled) { studentPage = Number(btn.dataset.page); loadStudents(); } });
-            $('studentsListBody').addEventListener('click', (e) => { const btn = e.target.closest('button[data-student]'); if (btn) manageStudent(Number(btn.dataset.student), btn.dataset.act); });
-            $('btnExportStudents').addEventListener('click', exportStudents);
-            $('btnExportExcel').addEventListener('click', () => {
+            $('studentsPager').addEventListener('click', (e) => { const btn = e.target.closest('button[data-page]'); if (btn && !btn.disabled) { studentPage = Number(btn.dataset.page); loadStudents(); } });$('studentsListBody').addEventListener('click', (e) => { const btn = e.target.closest('button[data-student]'); if (btn) manageStudent(Number(btn.dataset.student), btn.dataset.act); });
+            $('btnExportStudents').addEventListener('click', exportStudents);$('btnExportExcel').addEventListener('click', () => {
                 if (!currentTeachersList || currentTeachersList.length === 0) { notify('Không có dữ liệu!'); return; }
                 const data = currentTeachersList.map((t, index) => ({ 'STT': index + 1, 'Họ và tên': t.full_name || '', 'Email': t.email || '', 'Ngày sinh': t.dob || '', 'Số điện thoại': t.phone || '', 'Đơn vị công tác': t.workplace || '', 'Chức vụ': t.position || '' }));
                 const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "DanhSachGiaoVien"); ws['!cols'] = [{wch: 5}, {wch: 25}, {wch: 25}, {wch: 15}, {wch: 15}, {wch: 35}, {wch: 20}]; XLSX.writeFile(workbook, `DSGV_${new Date().toISOString().slice(0, 10)}.xlsx`);
