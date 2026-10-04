@@ -8,11 +8,11 @@
     <link href="common.css" rel="stylesheet">
 </head>
 <body class="auth-body">
-    <main class="container py-4">
+    <main id="authMain" class="container py-4 auth-checking">
         <div class="card auth-card shadow-lg p-4 mx-auto bg-white">
             <div class="text-center mb-4">
                 <span class="fs-1" aria-hidden="true">📚</span>
-                <h1 class="h4 fw-bold auth-title mt-2">CỔNG TIỂU HỌC</h1>
+                <h1 class="h4 fw-bold auth-title mt-2"> TỔ CHUYÊN MÔN KHỐI 2 XIN CHÀO  </h1>
             </div>
             <form id="loginForm">
                 <div class="mb-3">
@@ -34,7 +34,10 @@
     <script src="common.js"></script>
     <script>
         // Đã đăng nhập sẵn thì vào thẳng trang chủ
-        api('/api/me', { redirectOn401: false }).then(() => location.replace('index.html')).catch(() => {});
+        const authMain = document.getElementById('authMain');
+        const revealForm = () => authMain.classList.remove('auth-checking');
+        api('/api/me', { redirectOn401: false }).then(() => location.replace('index.html')).catch(revealForm);
+        setTimeout(revealForm, 1500); // phòng khi mạng chậm: vẫn cho hiện form
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();

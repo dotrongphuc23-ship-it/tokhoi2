@@ -25,7 +25,7 @@
         <div class="card p-4 border-0 shadow-sm mb-4">
             <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
                 <div>
-                    <span class="badge bg-primary mb-2" id="gradeBadge">Khối ...</span>
+                    <span class="badge bg-primary mb-2 d-none" id="gradeBadge">Khối ...</span>
                     <span class="badge bg-secondary mb-2" id="categoryBadge">...</span>
                     <h1 class="h2 fw-bold text-dark" id="docTitle">Đang tải tên tài liệu...</h1>
                 </div>
@@ -36,7 +36,7 @@
             </div>
             <div class="row text-secondary small mb-4 border-top border-bottom py-2 gy-1">
                 <div class="col-md-4"><i class="fa fa-user me-1"></i> Tác giả: <b id="authorDisplay" class="text-dark">...</b></div>
-                <div class="col-md-4"><i class="fa fa-book me-1"></i> Môn học: <b id="subjectDisplay" class="text-dark">...</b></div>
+                <div class="col-md-4" id="subjectCol"><i class="fa fa-book me-1"></i> Môn học: <b id="subjectDisplay" class="text-dark">...</b></div>
                 <div class="col-md-4"><i class="fa fa-calendar me-1"></i> Ngày đăng: <b id="dateDisplay" class="text-dark">...</b></div>
             </div>
             <p class="text-muted mb-0" id="descDisplay"></p>
@@ -55,11 +55,11 @@
             <form id="reviewForm" class="mb-4 bg-light p-3 rounded shadow-sm">
                 <label class="fw-bold small mb-1">Đánh giá của bạn</label>
                 <div class="mb-2 fs-4 star-rating" id="starPicker" role="radiogroup" aria-label="Số sao">
-                    <i class="fa fa-star text-warning" data-value="1" role="radio" tabindex="0" aria-label="1 sao"></i>
-                    <i class="fa fa-star text-warning" data-value="2" role="radio" tabindex="0" aria-label="2 sao"></i>
-                    <i class="fa fa-star text-warning" data-value="3" role="radio" tabindex="0" aria-label="3 sao"></i>
-                    <i class="fa fa-star text-warning" data-value="4" role="radio" tabindex="0" aria-label="4 sao"></i>
-                    <i class="fa fa-star text-warning" data-value="5" role="radio" tabindex="0" aria-label="5 sao"></i>
+                    <i class="fa fa-star text-warning" data-value="1" role="radio" tabindex="0"></i>
+                    <i class="fa fa-star text-warning" data-value="2" role="radio" tabindex="0"></i>
+                    <i class="fa fa-star text-warning" data-value="3" role="radio" tabindex="0"></i>
+                    <i class="fa fa-star text-warning" data-value="4" role="radio" tabindex="0"></i>
+                    <i class="fa fa-star text-warning" data-value="5" role="radio" tabindex="0"></i>
                 </div>
                 <textarea id="commentInput" class="form-control mb-2" rows="2" maxlength="1000" placeholder="Nhập nhận xét hoặc câu hỏi về tài liệu này..." required></textarea>
                 <button type="submit" id="btnReview" class="btn btn-brand btn-sm px-4">Gửi đánh giá</button>
@@ -80,33 +80,47 @@
             currentStars = n;
             document.querySelectorAll('#starPicker i').forEach((s, idx) => {
                 s.className = 'fa fa-star ' + (idx < n ? 'text-warning' : 'text-secondary');
-                s.setAttribute('aria-checked', idx + 1 === n ? 'true' : 'false');
             });
         }
         document.querySelectorAll('#starPicker i').forEach((star) => {
-            const pick = () => setStars(Number(star.dataset.value));
-            star.addEventListener('click', pick);
-            star.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+            star.addEventListener('click', () => setStars(Number(star.dataset.value)));
         });
 
         function renderFilePreview(item) {
             const area = document.getElementById('renderArea');
             const fileUrl = safeUrl(item.file_url);
             const type = String(item.file_type || '').toLowerCase();
-            if (!fileUrl) { area.innerHTML = '<p class="text-muted my-4">Tài liệu chưa có tệp đính kèm hợp lệ.</p>'; return; }
+            
+            if (!fileUrl) { area.innerHTML = '<p class="text-muted my-4">Tài liệu chưa có tệp đính kèm hoặc đường dẫn hợp lệ.</p>'; return; }
             const u = escapeHtml(fileUrl);
             const download = `<a href="${u}" target="_blank" rel="noopener" class="btn btn-primary px-4 rounded-pill shadow-sm"><i class="fa fa-download me-2"></i> Tải xuống tệp gốc</a>`;
 
-            if (['mp4', 'mov', 'webm'].includes(type)) {
+            if (type === 'url') {
+                area.innerHTML = `
+                    <div class="p-5 bg-light border rounded text-center shadow-sm">
+                        <i class="fa fa-link text-info fa-4x mb-3"></i>
+                        <h3 class="h5 fw-bold mb-3">Liên kết tài liệu ngoài</h3>
+                        <p class="text-muted mb-4">Tài liệu này được liên kết từ một nguồn bên ngoài (ví dụ: Google Sheets, YouTube, Google Docs...).</p>
+                        <a href="${u}" target="_blank" rel="noopener" class="btn btn-info px-4 rounded-pill shadow-sm text-white">
+                            <i class="fa fa-external-link-alt me-2"></i> Mở liên kết tài liệu
+                        </a>
+                    </div>`;
+            } else if (['mp4', 'mov', 'webm'].includes(type)) {
                 area.innerHTML = `<video controls class="w-100 rounded shadow" style="max-height: 500px; background: #000;"><source src="${u}" type="video/mp4">Trình duyệt của bạn không hỗ trợ phát video.</video>`;
+            } else if (['jpg', 'jpeg', 'png', 'webp'].includes(type)) {
+                area.innerHTML = `<img src="${u}" alt="Hình ảnh tài liệu" class="img-fluid rounded shadow" style="max-height: 550px;"><div class="mt-4">${download}</div>`;
             } else if (type === 'pdf') {
                 area.innerHTML = `<iframe src="${u}" class="preview-frame border rounded shadow-sm" title="Xem PDF"></iframe><div class="mt-3">${download}</div>`;
-            } else if (['doc', 'docx', 'ppt', 'pptx'].includes(type)) {
+            } else if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(type)) {
                 const viewer = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(fileUrl);
-                const icon = type.startsWith('ppt') ? 'fa-file-powerpoint text-danger' : 'fa-file-word text-primary';
+                
+                let icon = 'fa-file-word text-primary';
+                if (type.startsWith('ppt')) icon = 'fa-file-powerpoint text-danger';
+                else if (type.startsWith('xls') || type === 'csv') icon = 'fa-file-excel text-success';
+                
                 area.innerHTML = `
                     <iframe src="${escapeHtml(viewer)}" class="preview-frame border rounded shadow-sm" title="Xem trước tài liệu"></iframe>
-                    <p class="small text-muted mt-3 mb-2"><i class="fa ${icon} me-1"></i> Nếu khung xem trước không hiển thị, hãy tải tệp về và mở bằng Microsoft Office.</p>
+                    <p class="small text-muted mt-3 mb-2"><i class="fa ${icon} me-1"></i> Nếu khung xem trước không hiển thị, hãy tải tệp về và mở trên máy tính.</p>
                     ${download}`;
             } else {
                 area.innerHTML = `<div class="p-5 bg-light border rounded text-center"><i class="fa fa-file text-secondary fa-4x mb-3"></i>
@@ -123,23 +137,30 @@
                         <b class="text-dark small"><i class="fa fa-user-circle me-1"></i> ${escapeHtml(r.author)}</b>
                         <span class="text-muted small">${escapeHtml(r.created_at)}</span>
                     </div>
-                    <div class="text-warning small" aria-label="${Number(r.stars) || 0} sao">${'⭐'.repeat(Math.min(5, Math.max(0, Number(r.stars) || 0)))}</div>
+                    <div class="text-warning small">${'⭐'.repeat(Math.min(5, Math.max(0, Number(r.stars) || 0)))}</div>
                     <p class="mb-0 small text-secondary" style="white-space: pre-wrap;">${escapeHtml(r.comment)}</p>
                 </div>`).join('');
         }
 
-        // countView=false khi tải lại sau lúc gửi đánh giá để không tăng lượt xem
         async function loadLectureDetail(countView = true) {
             try {
                 const item = await api(`/api/lectures/${encodeURIComponent(lectureId)}?count_view=${countView ? 1 : 0}`);
                 document.title = item.title + ' - Cổng Tiểu Học';
-                document.getElementById('gradeBadge').textContent = `Khối ${item.grade}`;
+                
+                if (item.grade) {
+                    document.getElementById('gradeBadge').textContent = `Khối ${item.grade}`;
+                    document.getElementById('gradeBadge').classList.remove('d-none');
+                }
+                
+                if (!item.subject) document.getElementById('subjectCol').style.display = 'none';
+                else document.getElementById('subjectDisplay').textContent = item.subject;
+
                 document.getElementById('categoryBadge').textContent = CATEGORY_LABELS[item.category_type] || 'Tài liệu';
                 document.getElementById('docTitle').textContent = item.title;
                 document.getElementById('authorDisplay').textContent = item.author_name;
-                document.getElementById('subjectDisplay').textContent = item.subject;
                 document.getElementById('dateDisplay').textContent = new Date(item.created_at).toLocaleDateString('vi-VN');
                 document.getElementById('viewsDisplay').innerHTML = `<i class="fa fa-eye"></i> ${Number(item.views_count) || 0} lượt xem`;
+                
                 const hasRatings = item.ratings && item.ratings.length > 0;
                 document.getElementById('avgRatingDisplay').textContent = hasRatings ? `⭐ ${Number(item.avg_rating).toFixed(1)}` : 'Chưa có đánh giá';
                 document.getElementById('descDisplay').textContent = item.description || 'Không có mô tả chi tiết.';

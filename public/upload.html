@@ -15,71 +15,331 @@
                 <div class="mb-3">
                     <label for="category_type" class="form-label fw-bold">Loại tài liệu <span class="text-danger">*</span></label>
                     <select name="category_type" id="category_type" class="form-select" required>
-                        <option value="bai_giang">📖 Bài giảng điện tử (PowerPoint / Video)</option>
-                        <option value="giao_an">📝 Kế hoạch bài dạy / Giáo án (Word / PDF)</option>
-                        <option value="de_thi">📑 Đề thi và đề kiểm tra</option>
-                        <option value="tu_lieu">🖼️ Tư liệu dạy học</option>
-                        <option value="dao_tao">🎓 Tài liệu đào tạo chuyên môn</option>
+                        <option value="bai_giang">Bài giảng điện tử</option>
+                        <option value="bai_tap">Bài tập</option>
+                        <option value="ke_hoach_giang_day">Kế hoạch bài dạy</option>
+                        <option value="de_kiem_tra">Đề kiểm tra</option>
+                        <option value="tich_hop">Tích hợp môn học / HDGD</option>
+                        <option value="ke_hoach_day_hoc">Kế hoạch dạy học</option>
+                        <option value="ke_hoach_chuyen_mon">Kế hoạch chuyên môn</option>
+                        <option value="ke_hoach_gd_khoi_2">Kế hoạch giáo dục khối 2</option>
+                        <option value="van_ban_chuyen_mon">Văn bản chuyên môn</option>
+                        <option value="thu_vien_hinh_anh">Thư viện hình ảnh (Album Hình/Video)</option>
+                        <option value="ai">Trí tuệ nhân tạo (AI)</option>
                     </select>
                 </div>
+                
                 <div class="mb-3">
                     <label for="title" class="form-label fw-bold">Tên bài giảng / tài liệu <span class="text-danger">*</span></label>
                     <input type="text" name="title" id="title" class="form-control" required maxlength="255" placeholder="Nhập tên tài liệu...">
                 </div>
-                <div class="row mb-3">
+                
+                <div class="row mb-3" id="gradeSubjectRow">
                     <div class="col-6">
                         <label for="grade" class="form-label fw-bold">Khối lớp <span class="text-danger">*</span></label>
-                        <select name="grade" id="grade" class="form-select" required>
+                        <select name="grade" id="grade" class="form-select">
                             <option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option>
                             <option value="4">Khối 4</option><option value="5">Khối 5</option>
                         </select>
                     </div>
                     <div class="col-6">
                         <label for="subject" class="form-label fw-bold">Môn học <span class="text-danger">*</span></label>
-                        <select name="subject" id="subject" class="form-select" required></select>
+                        <select name="subject" id="subject" class="form-select"></select>
                     </div>
                 </div>
+
+                <!-- BOX NHẬP ALBUM -->
+                <div class="mb-3 d-none" id="albumRow">
+                    <label for="albumInput" class="form-label fw-bold text-primary">Chọn hoặc tạo Album mới <span class="text-danger">*</span></label>
+                    <input type="text" id="albumInput" class="form-control" list="albumList" placeholder="Gõ tên album mới hoặc chọn mục có sẵn...">
+                    <datalist id="albumList"></datalist>
+                    <small class="text-muted d-block mt-1">Ảnh/Video bạn chọn bên dưới sẽ được lưu chung vào Album này.</small>
+                </div>
+
                 <div class="mb-3">
-                    <label for="description" class="form-label fw-bold">Mô tả thêm (tùy chọn)</label>
+                    <label class="form-label fw-bold">Mô tả thêm (tùy chọn)</label>
                     <textarea name="description" id="description" class="form-control" rows="2" maxlength="2000" placeholder="Ghi chú mục tiêu..."></textarea>
                 </div>
-                <div class="mb-4">
-                    <label for="file" class="form-label fw-bold">File đính kèm (.pdf, .pptx, .docx, .mp4, tối đa 10MB) <span class="text-danger">*</span></label>
-                    <input type="file" name="file" id="file" class="form-control" required accept=".pdf,.pptx,.ppt,.docx,.doc,.mp4">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Hình thức đính kèm <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="attach_type" id="typeFile" value="file" checked>
+                            <label class="form-check-label" for="typeFile">Tải lên tệp máy tính</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="attach_type" id="typeUrl" value="url">
+                            <label class="form-check-label" for="typeUrl">Đường dẫn (URL)</label>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="mb-4" id="fileGroup">
+                    <label for="file" id="fileLabel" class="form-label fw-bold">File đính kèm (Có thể chọn nhiều file) <span class="text-danger">*</span></label>
+                    <input type="file" name="file" id="file" class="form-control" required multiple>
+                    <small id="fileHint" class="text-muted d-block mt-1">Hỗ trợ: PDF, Word, Excel, PowerPoint, MP4, Hình ảnh.</small>
+                </div>
+
+                <div class="mb-4 d-none" id="urlGroup">
+                    <label for="link_url" class="form-label fw-bold">Đường dẫn liên kết <span class="text-danger">*</span></label>
+                    <input type="url" name="link_url" id="link_url" class="form-control" placeholder="https://docs.google.com/spreadsheets/...">
+                    <small class="text-muted d-block mt-1">Sử dụng cho trang tính Google Sheets, Google Docs, YouTube, hoặc link tài liệu ngoài.</small>
+                </div>
+
+                <!-- THANH TIẾN TRÌNH TẢI LÊN -->
+                <div id="uploadProgressContainer" class="mb-3 d-none">
+                    <div class="d-flex justify-content-between mb-1 small">
+                        <span class="fw-bold text-primary">Đang tải tệp lên đám mây... Vui lòng không đóng trang!</span>
+                        <span class="fw-bold text-primary" id="uploadPercent">0%</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
                 <button type="submit" id="btnSub" class="btn btn-brand w-100 py-2 fw-bold">Đăng lên thư viện</button>
-                <div class="text-center mt-3"><a href="index.html" class="text-secondary text-decoration-none">← Quay lại trang chủ</a></div>
+                <div class="text-center mt-3"><a href="index.html" id="backLink" class="text-secondary text-decoration-none">← Quay lại trang chủ</a></div>
             </form>
         </div>
     </main>
     <script src="common.js"></script>
     <script>
-        const MAX_FILE = 50 * 1024 * 1024;
+        const MAX_FILE = 50 * 1024 * 1024; // 50MB
         document.getElementById('subject').innerHTML = optionsHtml(SUBJECTS);
 
-        // Quyền được kiểm tra ở server; trang chỉ dùng kết quả để điều hướng sớm cho thân thiện
+        const catSelect = document.getElementById('category_type');
+        const gradeSubjectRow = document.getElementById('gradeSubjectRow');
+        const albumRow = document.getElementById('albumRow');
+        
+        const gradeSelect = document.getElementById('grade');
+        const subjectSelect = document.getElementById('subject');
+        const albumInput = document.getElementById('albumInput');
+        
+        const fileInput = document.getElementById('file');
+        const fileHint = document.getElementById('fileHint');
+        const linkUrl = document.getElementById('link_url');
+
+        async function loadAlbums() {
+            try {
+                const albums = await api('/api/albums');
+                document.getElementById('albumList').innerHTML = albums.map(a => `<option value="${escapeHtml(a)}">`).join('');
+            } catch(e) {}
+        }
+
+        function toggleAttachType() {
+            if (document.getElementById('typeFile').checked) {
+                document.getElementById('fileGroup').classList.remove('d-none');
+                document.getElementById('urlGroup').classList.add('d-none');
+                fileInput.setAttribute('required', 'true');
+                linkUrl.removeAttribute('required');
+                linkUrl.value = '';
+            } else {
+                document.getElementById('fileGroup').classList.add('d-none');
+                document.getElementById('urlGroup').classList.remove('d-none');
+                fileInput.removeAttribute('required');
+                linkUrl.setAttribute('required', 'true');
+                fileInput.value = '';
+            }
+        }
+        document.getElementById('typeFile').addEventListener('change', toggleAttachType);
+        document.getElementById('typeUrl').addEventListener('change', toggleAttachType);
+
+        catSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const needsFields = ['bai_giang', 'bai_tap', 'ke_hoach_giang_day', 'de_kiem_tra', 'tich_hop'].includes(val);
+            const isImageLib = val === 'thu_vien_hinh_anh';
+            
+            if (needsFields) {
+                gradeSubjectRow.classList.remove('d-none');
+                gradeSelect.setAttribute('required', 'true');
+                subjectSelect.setAttribute('required', 'true');
+                subjectSelect.name = 'subject';
+            } else {
+                gradeSubjectRow.classList.add('d-none');
+                gradeSelect.removeAttribute('required');
+                subjectSelect.removeAttribute('required');
+                subjectSelect.name = '';
+            }
+
+            if (isImageLib) {
+                albumRow.classList.remove('d-none');
+                albumInput.setAttribute('required', 'true');
+                albumInput.name = 'subject'; 
+            } else {
+                albumRow.classList.add('d-none');
+                albumInput.removeAttribute('required');
+                albumInput.name = ''; 
+            }
+
+            if (isImageLib) {
+                fileInput.setAttribute('accept', '.jpg,.jpeg,.png,.webp,.mp4,.mov,.webm');
+                fileHint.textContent = 'Bạn có thể CHỌN NHIỀU Hình ảnh/Video cùng lúc (Tối đa 20 file/lần).';
+                fileHint.classList.replace('text-muted', 'text-primary');
+            } else {
+                fileInput.setAttribute('accept', '.pdf,.pptx,.ppt,.docx,.doc,.xls,.xlsx,.csv,.mp4,.jpg,.jpeg,.png');
+                fileHint.textContent = 'Hỗ trợ: PDF, Word, Excel, PowerPoint, MP4, Hình ảnh. (Cho phép chọn nhiều).';
+                fileHint.classList.replace('text-primary', 'text-muted');
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const presetCat = urlParams.get('cat');
+        const presetAlbum = urlParams.get('album');
+        
+        if (presetCat) {
+            catSelect.value = presetCat;
+        }
+
         (async function init() {
             const user = await requireUser();
             if (!user) return;
             if (!['teacher', 'admin', 'master_admin'].includes(user.role)) {
-                notify('Chỉ giáo viên và quản trị viên mới được đăng tải tài liệu.');
+                notify('Chỉ giáo viên và quản trị viên mới được đăng tải.');
                 setTimeout(() => location.replace('index.html'), 1500);
+            }
+            loadAlbums();
+            catSelect.dispatchEvent(new Event('change')); 
+            
+            if (presetAlbum && presetCat === 'thu_vien_hinh_anh') {
+                albumInput.value = presetAlbum;
+                document.getElementById('title').focus();
             }
         })();
 
+        const preventClose = (e) => { e.preventDefault(); e.returnValue = ''; };
+
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const file = document.getElementById('file').files[0];
-            if (file && file.size > MAX_FILE) { notify('File vượt quá 10MB. Hãy nén hoặc chọn file nhỏ hơn.'); return; }
+            const files = fileInput.files;
+            const isFileMode = document.getElementById('typeFile').checked;
+            
+            if (isFileMode && files.length > 0) { 
+                if(files.length > 20) {
+                    notify('Bạn chỉ được phép tải lên tối đa 20 file trong 1 lần.'); return;
+                }
+                for(let i = 0; i < files.length; i++) {
+                    if(files[i].size > MAX_FILE) {
+                        notify(`File "${files[i].name}" vượt quá 50MB. Quá trình tải lên bị hủy.`); return;
+                    }
+                }
+            }
+            
             const btn = document.getElementById('btnSub');
-            setBusy(btn, true, 'Đang tải lên, vui lòng không đóng trang...');
+            const formElements = document.querySelectorAll('#uploadForm input, #uploadForm select, #uploadForm textarea, #uploadForm button');
+            const backLink = document.getElementById('backLink');
+            const progressContainer = document.getElementById('uploadProgressContainer');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const uploadPercent = document.getElementById('uploadPercent');
+
+            // 1. Trích xuất dữ liệu form trước khi khóa
+            const formDataToSend = new FormData(e.target);
+
+            // 2. Khóa Giao Diện
+            function lockUI() {
+                setBusy(btn, true, 'Đang chuẩn bị dữ liệu...');
+                formElements.forEach(el => el.disabled = true);
+                backLink.style.pointerEvents = 'none';
+                backLink.classList.add('text-muted');
+                window.addEventListener('beforeunload', preventClose);
+            }
+
+            function unlockUI() {
+                setBusy(btn, false);
+                formElements.forEach(el => el.disabled = false);
+                backLink.style.pointerEvents = 'auto';
+                backLink.classList.remove('text-muted');
+                progressContainer.classList.add('d-none');
+                progressBar.style.width = '0%';
+                uploadPercent.textContent = '0%';
+                window.removeEventListener('beforeunload', preventClose);
+            }
+
+            lockUI();
+
+            // Gói payload dữ liệu text
+            const payload = {
+                category_type: formDataToSend.get('category_type'),
+                title: formDataToSend.get('title'),
+                grade: formDataToSend.get('grade'),
+                subject: formDataToSend.get('subject') || formDataToSend.get('albumInput'),
+                description: formDataToSend.get('description'),
+                link_url: formDataToSend.get('link_url')
+            };
+
+            // TRƯỜNG HỢP A: TẢI ĐƯỜNG DẪN URL
+            if (!isFileMode) {
+                try {
+                    await api('/api/lectures', { method: 'POST', json: payload });
+                    notify('Đăng tài liệu thành công!', 'success', 3000);
+                    window.removeEventListener('beforeunload', preventClose);
+                    setTimeout(() => { location.href = 'index.html'; }, 1200);
+                } catch (err) { notify(err.message); unlockUI(); }
+                return;
+            }
+
+            // TRƯỜNG HỢP B: DIRECT UPLOAD LÊN SUPABASE
+            progressContainer.classList.remove('d-none');
+            btn.textContent = 'Đang khởi tạo kết nối đám mây...';
+
             try {
-                await api('/api/lectures', { method: 'POST', form: new FormData(e.target) });
-                notify('Tải lên tài liệu thành công!', 'success', 3000);
+                // Xin cấp Signed URL cho tất cả các files
+                const filesInfo = Array.from(files).map(f => ({ name: f.name }));
+                const { urls } = await api('/api/lectures/get-upload-url', { 
+                    method: 'POST', json: { files: filesInfo } 
+                });
+
+                btn.textContent = 'Đang đẩy dữ liệu lên đám mây, vui lòng không đóng trang...';
+
+                const totalSize = Array.from(files).reduce((sum, f) => sum + f.size, 0);
+                let totalLoaded = 0;
+                let loadedPerFile = Array(files.length).fill(0);
+                
+                // Mở luồng tải lên song song từng file trực tiếp vào đám mây
+                const uploadPromises = Array.from(files).map((file, i) => {
+                    return new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', urls[i].signedUrl, true);
+                        
+                        // Khai báo đúng định dạng để Supabase nhận diện
+                        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+                        xhr.upload.onprogress = (e) => {
+                            if (e.lengthComputable) {
+                                loadedPerFile[i] = e.loaded;
+                                totalLoaded = loadedPerFile.reduce((a, b) => a + b, 0);
+                                const percent = Math.round((totalLoaded / totalSize) * 100);
+                                progressBar.style.width = percent + '%';
+                                uploadPercent.textContent = percent + '%';
+                                
+                                if (percent === 100) btn.textContent = 'Đang lưu dữ liệu vào hệ thống...';
+                            }
+                        };
+                        
+                        xhr.onload = () => {
+                            if (xhr.status >= 200 && xhr.status < 300) resolve(urls[i]);
+                            else reject(new Error('Đám mây từ chối file: ' + file.name));
+                        };
+                        xhr.onerror = () => reject(new Error('Mất kết nối mạng khi đang tải: ' + file.name));
+                        
+                        // Đẩy thẳng File Binary qua Signed URL
+                        xhr.send(file);
+                    });
+                });
+
+                // Đợi toàn bộ ảnh/tệp lên mây xong
+                payload.uploadedFiles = await Promise.all(uploadPromises);
+
+                // Gửi lại danh sách link về cho máy chủ lưu CSDL
+                await api('/api/lectures', { method: 'POST', json: payload });
+                
+                notify('Đăng tài liệu thành công!', 'success', 3000);
+                window.removeEventListener('beforeunload', preventClose);
                 setTimeout(() => { location.href = 'index.html'; }, 1200);
+
             } catch (err) {
                 notify(err.message);
-                setBusy(btn, false);
+                unlockUI();
             }
         });
     </script>
