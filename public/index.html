@@ -13,25 +13,28 @@
     <div class="container-xl px-md-4 mt-4 mb-3">
         <div id="topBannerImage" class="banner-frame shadow-sm" role="img" aria-label="Ảnh bìa" style="display: none;"><img id="bannerImg" alt="" draggable="false"></div>
         <!-- THÊM position-relative và z-index: 1050 ĐỂ KHÔNG BỊ THANH TÌM KIẾM ĐÈ LÊN -->
-        <header id="headerBanner" class="shadow-sm border position-relative" style="background: var(--bs-body-bg); padding: 20px 30px; border-bottom: 5px solid var(--accent) !important; border-radius: 20px; z-index: 1050;">
+        <header id="headerBanner" class="shadow-sm border position-relative" style="background-color: #60A5FA; padding: 20px 30px; border-bottom: 5px solid var(--accent) !important; border-radius: 20px; z-index: 1050;">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-outline-secondary d-lg-none rounded-circle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+                    <button class="btn btn-outline-light d-lg-none rounded-circle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
                         <i class="fa fa-bars"></i>
                     </button>
-                    <!-- THÊM ẢNH LOGO -->
-                    <img id="schoolLogo" src="" alt="Logo" class="d-none me-2" style="height: 100px; object-fit: contain;">
+                    <!-- ẢNH LOGO -->
+                    <img id="schoolLogo" src="" alt="Logo" class="d-none me-3 shadow-sm rounded" style="height:100px; width: auto; object-fit: contain;">
                     <span class="fs-1 me-2" id="schoolLogoText" aria-hidden="true">📚</span>
                     <div>
-                        <h1 class="h4 fw-bold mb-0 text-uppercase text-body" id="schoolName">Đang tải...</h1>
-                        <!-- ĐỔI SLOGAN SANG text-danger -->
-                        <div class="small text-danger fw-bold" id="schoolSlogan"></div>
-                        <small class="text-secondary" id="schoolContact"></small>
+                        <!-- Tên trường: Màu vàng -->
+                        <h1 class="h4 fw-bold mb-0 text-uppercase" style="color: #FFEA00 !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.2);" id="schoolName">Đang tải...</h1>
+                        <!-- Slogan: Màu đỏ (kèm viền sáng nhẹ để không bị chìm trên nền xanh) -->
+                        <h1 class="small text-danger fw-bold mt-1" id="schoolSlogan" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.7);"></h1>
+                        <!-- Địa chỉ: Màu trắng in đậm -->
+                        <div class="text-white fw-bold" id="schoolContact" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.3);"></div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-3" id="headerActionArea">
-                    <button class="btn btn-light rounded-circle shadow-sm border" id="btnThemeToggle" title="Đổi giao diện Sáng/Tối">
-                        <i class="fa fa-moon" id="themeIcon"></i>
+                    <!-- Nút Chuyển đổi tương phản -->
+                    <button class="btn btn-light rounded-circle shadow-sm border" id="btnThemeToggle" title="Chuyển đổi màu tương phản">
+                        <i class="fa fa-circle-half-stroke" id="themeIcon"></i>
                     </button>
                     <div id="userMenuArea"></div>
                 </div>
@@ -202,12 +205,14 @@
         const showModal = (id) => bootstrap.Modal.getOrCreateInstance($(id)).show();
         const hideModal = (id) => bootstrap.Modal.getOrCreateInstance($(id)).hide();
 
-        function toggleTheme() {
+      function toggleTheme() {
             const current = document.documentElement.getAttribute('data-bs-theme');
             const next = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-bs-theme', next);
             localStorage.setItem('theme', next);
-            $('themeIcon').className = next === 'dark' ? 'fa fa-sun text-warning' : 'fa fa-moon';
+            
+            // Đổi biểu tượng thành Vòng tròn tương phản (Circle Half-Stroke)
+            $('themeIcon').className = next === 'dark' ? 'fa fa-circle-half-stroke text-warning' : 'fa fa-circle-half-stroke text-dark';
         }
 
         async function loadAlbums() {
@@ -740,7 +745,8 @@
                 if (currentCategory) loadLectures(); 
             });
             
-            $('themeIcon').className = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'fa fa-sun text-warning' : 'fa fa-moon text-secondary';
+           // Khởi tạo Icon Giao diện lần đầu
+            $('themeIcon').className = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'fa fa-circle-half-stroke text-warning' : 'fa fa-circle-half-stroke text-dark';
         }
 
         (async function init() {
