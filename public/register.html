@@ -16,7 +16,6 @@
             </div>
             
             <form id="regForm">
-                <!-- Bước 1: Thông tin cá nhân & Gửi Email -->
                 <div id="step1">
                     <div class="mb-3">
                         <label for="role" class="form-label fw-bold">Bạn đăng ký với vai trò gì?</label>
@@ -54,31 +53,17 @@
                     <div class="mb-4">
                         <label for="email" class="form-label fw-bold">Địa chỉ Email <span class="text-danger">*</span></label>
                         <input type="email" id="email" class="form-control" required placeholder="name@gmail.com">
-                        <small class="text-muted d-block mt-1">Chúng tôi sẽ gửi mã xác thực (OTP) tới email này.</small>
+                        <small class="text-muted d-block mt-1">Email dùng để đăng nhập.</small>
                     </div>
 
-                    <button type="button" id="btnSendOtp" class="btn btn-primary w-100 py-2 fw-bold">Xác thực Email & Tiếp tục</button>
                 </div>
 
-                <!-- Bước 2: Nhập OTP & Tạo mật khẩu -->
-                <div id="step2" class="d-none">
-                    <div class="alert alert-info py-2 px-3 small mb-3">
-                        Mã xác thực (OTP) 6 số đã được gửi tới hộp thư: <b id="displayEmail"></b>. Vui lòng kiểm tra (cả hộp thư rác).
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="otpCode" class="form-label fw-bold">Mã xác thực (OTP) <span class="text-danger">*</span></label>
-                        <input type="text" id="otpCode" class="form-control otp-input" maxlength="6" inputmode="numeric" pattern="\d{6}">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="password" class="form-label fw-bold">Thiết lập mật khẩu <span class="text-danger">*</span></label>
-                        <input type="password" id="password" class="form-control" minlength="6" placeholder="Tối thiểu 6 ký tự">
-                    </div>
-
-                    <button type="submit" id="btnSubmitReg" class="btn btn-success w-100 py-2 fw-bold">Hoàn tất đăng ký</button>
-                    <div class="text-center mt-3 small"><a href="#" id="btnBackToStep1" class="text-decoration-none">← Đổi email / Gửi lại mã</a></div>
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-bold">Thiết lập mật khẩu <span class="text-danger">*</span></label>
+                    <input type="password" id="password" class="form-control" required minlength="6" maxlength="72" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự">
                 </div>
+
+                <button type="submit" id="btnSubmitReg" class="btn btn-success w-100 py-2 fw-bold">Hoàn tất đăng ký</button>
             </form>
             
             <div class="text-center mt-4 pt-3 border-top small">
@@ -100,66 +85,6 @@
             teacherInputs.forEach(inp => isTeacher ? inp.setAttribute('required', 'true') : inp.removeAttribute('required'));
         });
 
-        // --- HÀM ĐẾM NGƯỢC THỜI GIAN CHỜ ---
-        let cooldownTimer = null;
-
-        function startCooldown(btn, seconds) {
-            let timeLeft = seconds;
-            btn.disabled = true; 
-            
-            // Lưu lại trạng thái gốc của nút
-            const originalText = btn.dataset.label || btn.innerHTML;
-            
-            cooldownTimer = setInterval(() => {
-                btn.textContent = `Gửi lại sau ${timeLeft} giây`;
-                timeLeft--;
-
-                if (timeLeft < 0) {
-                    clearInterval(cooldownTimer);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
-            }, 1000);
-        }
-
-        document.getElementById('btnSendOtp').addEventListener('click', async () => {
-            const form = document.getElementById('regForm');
-            if (!form.checkValidity()) { form.reportValidity(); return; }
-
-            const btn = document.getElementById('btnSendOtp');
-            const email = document.getElementById('email').value.trim();
-            
-            // Báo hiệu đang xử lý
-            setBusy(btn, true, 'Đang gửi mã OTP...');
-            
-            try {
-                await api('/api/auth/register-otp', { method: 'POST', redirectOn401: false, json: { email: email } });
-                
-                document.getElementById('displayEmail').textContent = email;
-                document.getElementById('step1').classList.add('d-none');
-                document.getElementById('step2').classList.remove('d-none');
-                document.getElementById('otpCode').setAttribute('required', 'true');
-                document.getElementById('password').setAttribute('required', 'true');
-                document.getElementById('otpCode').focus();
-
-                // Khóa nút 60 giây khi thành công
-                startCooldown(btn, 60);
-
-            } catch (err) { 
-                notify(err.message); 
-                // Phạt chờ 30 giây nếu lỗi hoặc spam
-                startCooldown(btn, 30);
-            }
-        });
-
-        document.getElementById('btnBackToStep1').addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('step2').classList.add('d-none');
-            document.getElementById('step1').classList.remove('d-none');
-            document.getElementById('otpCode').removeAttribute('required');
-            document.getElementById('password').removeAttribute('required');
-        });
-
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmitReg');
@@ -172,7 +97,6 @@
                         email: document.getElementById('email').value,
                         password: document.getElementById('password').value,
                         role: roleSel.value,
-                        otp: document.getElementById('otpCode').value,
                         dob: document.getElementById('dob').value,
                         phone: document.getElementById('phone').value,
                         workplace: document.getElementById('workplace').value,

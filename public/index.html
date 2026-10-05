@@ -600,7 +600,7 @@
                 $('teachersOnlineCount').textContent = `(${list.filter((t) => t.online).length}/${list.length} đang online)`;
                 tbody.innerHTML = list.length ? list.map((t) => {
                     const permBtn = t.can_manage_docs ? `<button type="button" class="btn btn-outline-warning btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="revoke_perm">Tước quyền Sửa</button>` : `<button type="button" class="btn btn-outline-success btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="grant_perm">Cấp quyền Sửa</button>`;
-                    return `<tr><td class="fw-bold">${escapeHtml(t.full_name)}</td><td class="text-nowrap">${presenceCell(t)}</td><td>${escapeHtml(t.email)}</td><td class="text-center">${escapeHtml(t.dob || '-')}</td><td class="text-center">${escapeHtml(t.phone || '-')}</td><td class="text-wrap" style="min-width: 220px;">${escapeHtml(t.workplace || '-')}</td><td>${escapeHtml(t.position || '-')}</td><td class="text-center">${permBtn}<button type="button" class="btn btn-outline-danger btn-sm mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="delete">Xóa</button></td></tr>`;
+                    return `<tr><td class="fw-bold">${escapeHtml(t.full_name)}</td><td class="text-nowrap">${presenceCell(t)}</td><td>${escapeHtml(t.email)}</td><td class="text-center">${escapeHtml(t.dob || '-')}</td><td class="text-center">${escapeHtml(t.phone || '-')}</td><td class="text-wrap" style="min-width: 220px;">${escapeHtml(t.workplace || '-')}</td><td>${escapeHtml(t.position || '-')}</td><td class="text-center">${permBtn}<button type="button" class="btn btn-outline-primary btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="reset_pw"><i class="fa fa-key"></i> Đặt lại MK</button><button type="button" class="btn btn-outline-danger btn-sm mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="delete">Xóa</button></td></tr>`;
                 }).join('') : `<tr><td colspan="8">${emptyStateHtml('👨‍🏫', 'Chưa có giáo viên', 'Danh sách giáo viên hiện đang trống.')}</td></tr>`;
             } catch (e) { notify(e.message); }
         }
@@ -608,7 +608,7 @@
         function studentRow(s) {
             const id = Number(s.id); const status = s.is_locked ? '<span class="badge bg-danger">Đã khóa</span>' : presenceCell(s);
             const lockBtn = s.is_locked ? `<button type="button" class="btn btn-outline-success btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="unlock">Mở khóa</button>` : `<button type="button" class="btn btn-outline-warning btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="lock">Khóa</button>`;
-            return `<tr class="${s.is_locked ? 'table-secondary' : ''}"><td class="fw-bold">${escapeHtml(s.full_name)}</td><td>${escapeHtml(s.email)}</td><td class="text-center">${escapeHtml(new Date(s.created_at).toLocaleDateString('vi-VN'))}</td><td class="text-center text-nowrap">${status}</td><td class="text-center text-nowrap">${lockBtn}<button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill" data-student="${id}" data-act="delete">Xóa</button></td></tr>`;
+            return `<tr class="${s.is_locked ? 'table-secondary' : ''}"><td class="fw-bold">${escapeHtml(s.full_name)}</td><td>${escapeHtml(s.email)}</td><td class="text-center">${escapeHtml(new Date(s.created_at).toLocaleDateString('vi-VN'))}</td><td class="text-center text-nowrap">${status}</td><td class="text-center text-nowrap">${lockBtn}<button type="button" class="btn btn-outline-primary btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="reset_pw"><i class="fa fa-key"></i> Đặt lại MK</button><button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill" data-student="${id}" data-act="delete">Xóa</button></td></tr>`;
         }
 
         async function loadStudents() {
@@ -624,7 +624,19 @@
             } catch (e) { if (seq !== studentSeq || e.status === 401) return; notify(e.message); }
         }
 
+        function resetUserPassword(id) {
+            showPrompt('Đặt lại mật khẩu', 'Nhập mật khẩu mới (6 - 72 ký tự) rồi báo cho người dùng. Họ nên đổi lại sau khi đăng nhập.', 'Mật khẩu mới', async (val) => {
+                const pw = (val || '').trim();
+                if (pw.length < 6 || pw.length > 72) { notify('Mật khẩu phải từ 6 đến 72 ký tự.'); return; }
+                try {
+                    const res = await api(`/api/admin/users/${id}/reset-password`, { method: 'POST', json: { new_password: pw } });
+                    notify(res.message, 'success', 5000);
+                } catch (e) { notify(e.message); }
+            });
+        }
+
         function manageStudent(id, action) {
+            if (action === 'reset_pw') { resetUserPassword(id); return; }
             const exec = async () => {
                 try {
                     if (action === 'delete') await api(`/api/admin/students/${id}`, { method: 'DELETE' }); else await api(`/api/admin/students/${id}/lock`, { method: 'POST', json: { locked: action === 'lock' } });
@@ -658,6 +670,7 @@
         }
 
         function manageTeacher(id, action) {
+            if (action === 'reset_pw') { resetUserPassword(id); return; }
             if (action === 'grant_perm' || action === 'revoke_perm') {
                 const exec = async () => { try { const res = await api(`/api/admin/teachers/${id}/permission`, { method: 'POST', json: { can_manage_docs: action === 'grant_perm' } }); notify(res.message, 'success', 3000); loadAllTeachers(); } catch (e) { notify(e.message); } };
                 exec(); return;

@@ -9,7 +9,6 @@ const multer = require('multer');
 const { Pool } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const path = require('path');
 
 // ================= 0. CẤU HÌNH CHUNG =================
@@ -174,8 +173,6 @@ async function uploadToSupabase(fileBuffer, originalName, folderName, mimeType) 
 const makeLimiter = (minutes, max, message, extra = {}) => rateLimit({ windowMs: minutes * 60 * 1000, max, standardHeaders: true, legacyHeaders: false, message: { error: message }, ...extra });
 const loginLimiter = makeLimiter(15, 10, 'Bạn đăng nhập sai quá nhiều lần. Hãy thử lại sau 15 phút.', { skipSuccessfulRequests: true });
 const registerLimiter = makeLimiter(60, 10, 'Bạn đã thử quá nhiều lần. Hãy đợi một chút.');
-const forgotLimiter = makeLimiter(15, 5, 'Bạn đã yêu cầu quá nhiều lần. Hãy thử lại sau 15 phút.');
-const otpLimiter = makeLimiter(15, 10, 'Bạn đã thử quá nhiều lần. Hãy thử lại sau 15 phút.');
 
 const verifyToken = wrap(async (req, res, next) => {
     const token = req.cookies.token;
@@ -226,24 +223,11 @@ app.post('/api/auth/logout', wrap(async (req, res) => {
 
 app.get('/api/me', verifyToken, (req, res) => res.json({ user: req.user }));
 
-const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASS } });
-const registerOtps = new Map();
-
-app.post('/api/auth/register-otp', registerLimiter, wrap(async (req, res) => {
-    const email = normEmail(req.body.email); if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email không hợp lệ.' });
-    const { rows } = await pool.query('SELECT id FROM users WHERE email = $1', [email]); if (rows.length > 0) return res.status(409).json({ error: 'Email này đã được sử dụng.' });
-    const otp = String(crypto.randomInt(100000, 1000000));
-    registerOtps.set(email, { otp: sha(otp), expires: Date.now() + 10 * 60 * 1000 });
-    transporter.sendMail({ from: `"Cổng Thông Tin Học Tập" <${process.env.GMAIL_USER}>`, to: email, subject: 'Mã xác thực đăng ký tài khoản', html: `<h3>Xác thực đăng ký</h3><p>Mã OTP của bạn: <b style="font-size:24px">${otp}</b></p><p>Mã có hiệu lực trong 10 phút.</p>` }).catch(() => {});
-    res.json({ message: 'Đã gửi mã xác thực tới email.' });
-}));
+// Đăng ký không còn xác minh OTP qua email.
 
 app.post('/api/auth/register', registerLimiter, wrap(async (req, res) => {
-    const { full_name, email: rawEmail, password, role, otp, dob, phone, workplace, position } = req.body;
-    const email = normEmail(rawEmail); const record = registerOtps.get(email);
-    if (!record || Date.now() > record.expires) return res.status(400).json({ error: 'Mã OTP không đúng hoặc đã hết hạn.' });
-    const given = Buffer.from(sha(cleanStr(otp))), stored = Buffer.from(record.otp);
-    if (given.length !== stored.length || !crypto.timingSafeEqual(given, stored)) return res.status(400).json({ error: 'Mã OTP không đúng.' });
+    const { full_name, email: rawEmail, password, role, dob, phone, workplace, position } = req.body;
+    const email = normEmail(rawEmail); if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email không hợp lệ.' });
 
     const fullName = cleanStr(full_name); if (fullName.length < 2 || fullName.length > 100) return res.status(400).json({ error: 'Họ tên phải từ 2 đến 100 ký tự.' });
     const pwErr = validatePassword(password); if (pwErr) return res.status(400).json({ error: pwErr });
@@ -254,38 +238,11 @@ app.post('/api/auth/register', registerLimiter, wrap(async (req, res) => {
             'INSERT INTO users (full_name, email, password_hash, role, status, dob, phone, workplace, position, can_manage_docs) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)',
             [fullName, email, hash, isTeacher ? 'teacher' : 'student', isTeacher ? 'pending' : 'approved', isTeacher ? cleanStr(dob) : null, isTeacher ? cleanStr(phone) : null, isTeacher ? cleanStr(workplace) : null, isTeacher ? cleanStr(position) : null]
         );
-        registerOtps.delete(email);
     } catch (err) { if (err.code === '23505') return res.status(409).json({ error: 'Email này đã được đăng ký.' }); throw err; }
     res.json({ message: isTeacher ? 'Đăng ký thành công! Hồ sơ đang chờ Ban giám hiệu duyệt.' : 'Đăng ký thành công! Bạn có thể đăng nhập ngay.' });
 }));
 
-const FORGOT_REPLY = { message: 'Nếu email tồn tại, mã xác nhận đã được gửi.' };
-
-app.post('/api/auth/forgot-password', forgotLimiter, wrap(async (req, res) => {
-    const email = normEmail(req.body.email); if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email không hợp lệ.' });
-    const { rows } = await pool.query('SELECT id, reset_sent_at FROM users WHERE email = $1', [email]); const user = rows[0];
-    if (!user || (user.reset_sent_at && Date.now() - Number(user.reset_sent_at) < 60000)) return res.json(FORGOT_REPLY);
-
-    const otp = String(crypto.randomInt(100000, 1000000)), now = Date.now();
-    await pool.query('UPDATE users SET reset_otp_hash = $1, reset_otp_expires = $2, reset_sent_at = $3, reset_attempts = 0 WHERE id = $4', [sha(otp), now + 600000, now, user.id]);
-    transporter.sendMail({ from: `"Cổng Thông Tin Học Tập" <${process.env.GMAIL_USER}>`, to: email, subject: 'Khôi phục mật khẩu', html: `<h3>Khôi phục mật khẩu</h3><p>Mã OTP của bạn: <b style="font-size:24px">${otp}</b></p><p>Mã có hiệu lực trong 10 phút.</p>` }).catch(() => {});
-    res.json(FORGOT_REPLY);
-}));
-
-app.post('/api/auth/verify-otp-reset', otpLimiter, wrap(async (req, res) => {
-    const email = normEmail(req.body.email), otp = cleanStr(req.body.otp), newPassword = req.body.new_password;
-    if (!EMAIL_RE.test(email) || !/^\d{6}$/.test(otp)) return res.status(400).json({ error: 'Mã OTP phải gồm đúng 6 chữ số.' });
-    const pwErr = validatePassword(newPassword); if (pwErr) return res.status(400).json({ error: pwErr });
-    const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]); const user = rows[0];
-    if (!user || !user.reset_otp_hash || Date.now() > Number(user.reset_otp_expires)) return res.status(400).json({ error: 'Mã OTP không đúng hoặc đã hết hạn.' });
-    if (user.reset_attempts >= 5) return res.status(429).json({ error: 'Bạn đã nhập sai quá nhiều lần. Hãy yêu cầu mã mới.' });
-
-    const given = Buffer.from(sha(otp)), stored = Buffer.from(user.reset_otp_hash);
-    if (given.length !== stored.length || !crypto.timingSafeEqual(given, stored)) { await pool.query('UPDATE users SET reset_attempts = reset_attempts + 1 WHERE id = $1', [user.id]); return res.status(400).json({ error: 'Mã OTP không đúng hoặc đã hết hạn.' }); }
-    const hash = await bcrypt.hash(newPassword, 10);
-    await pool.query('UPDATE users SET password_hash = $1, reset_otp_hash = NULL, reset_otp_expires = NULL, reset_attempts = 0 WHERE id = $2', [hash, user.id]);
-    res.json({ message: 'Đổi mật khẩu thành công! Hãy đăng nhập lại.' });
-}));
+// Chức năng quên mật khẩu bằng OTP đã được gỡ bỏ.
 
 // ================= 6. CÀI ĐẶT TRƯỜNG & QUẢN LÝ GIÁO VIÊN =================
 app.get('/api/settings', wrap(async (req, res) => {
@@ -345,6 +302,16 @@ app.post('/api/admin/delete-teacher', verifyToken, requireAdmin, wrap(async (req
     const id = toInt(req.body.teacher_id); if (!id) return res.status(400).json({ error: 'Yêu cầu không hợp lệ.' });
     const result = await pool.query("DELETE FROM users WHERE id = $1 AND role = 'teacher'", [id]);
     if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy giáo viên.' }); res.json({ message: 'Đã xóa giáo viên!' });
+}));
+
+// Admin đặt lại mật khẩu cho giáo viên / học sinh (thay cho chức năng quên mật khẩu qua OTP)
+app.post('/api/admin/users/:id/reset-password', verifyToken, requireAdmin, wrap(async (req, res) => {
+    const id = toInt(req.params.id); if (!id) return res.status(400).json({ error: 'Yêu cầu không hợp lệ.' });
+    const pwErr = validatePassword(req.body.new_password); if (pwErr) return res.status(400).json({ error: pwErr });
+    const hash = await bcrypt.hash(req.body.new_password, 10);
+    const result = await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2 AND role IN ('teacher', 'student')", [hash, id]);
+    if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy tài khoản giáo viên/học sinh.' });
+    res.json({ message: 'Đã đặt lại mật khẩu. Hãy báo mật khẩu mới cho người dùng.' });
 }));
 
 app.get('/api/admin/students', verifyToken, requireAdmin, wrap(async (req, res) => {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Khôi Phục Mật Khẩu - Cổng Tiểu Học</title>
+    <title>Quên Mật Khẩu - Cổng Tiểu Học</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="common.css" rel="stylesheet">
 </head>
@@ -14,110 +14,11 @@
                 <span class="fs-1" aria-hidden="true">🔑</span>
                 <h1 class="h4 fw-bold auth-title mt-2">QUÊN MẬT KHẨU</h1>
             </div>
-
-            <div id="step1">
-                <form id="requestOtpForm">
-                    <div class="mb-3">
-                        <label for="targetEmail" class="form-label fw-bold">Địa chỉ Gmail của bạn</label>
-                        <input type="email" id="targetEmail" class="form-control" required autocomplete="username" placeholder="nhapemail@gmail.com">
-                    </div>
-                    <button type="submit" id="btnSendOtp" class="btn btn-brand w-100 py-2 fw-bold">Gửi mã xác nhận về Gmail</button>
-                </form>
+            <div class="alert alert-info small mb-0">
+                Hệ thống không còn tự khôi phục mật khẩu qua email. Vui lòng liên hệ quản trị viên (Ban giám hiệu / tổ trưởng chuyên môn) để được hỗ trợ cấp lại mật khẩu.
             </div>
-
-            <div id="step2" class="d-none">
-                <div class="alert alert-info py-2 px-3 small mb-3">
-                    Nếu <b id="displayEmail"></b> đã đăng ký, mã OTP 6 số đã được gửi tới hộp thư. Mã có hiệu lực trong 10 phút.
-                </div>
-                <form id="verifyOtpForm">
-                    <div class="mb-3">
-                        <label for="otpCode" class="form-label fw-bold">Mã xác nhận OTP (6 số)</label>
-                        <input type="text" id="otpCode" class="form-control otp-input" required maxlength="6" inputmode="numeric" pattern="\d{6}" autocomplete="one-time-code">
-                    </div>
-                    <div class="mb-3">
-                        <label for="newPassword" class="form-label fw-bold">Mật khẩu mới</label>
-                        <input type="password" id="newPassword" class="form-control" required minlength="6" maxlength="72" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự">
-                    </div>
-                    <button type="submit" id="btnVerify" class="btn btn-success w-100 py-2 fw-bold">Xác nhận và đổi mật khẩu</button>
-                </form>
-                <div class="text-center mt-3 small">
-                    <a href="#" id="backToStep1" class="text-decoration-none">Nhập lại email hoặc gửi lại mã</a>
-                </div>
-            </div>
-
             <div class="text-center mt-3 small pt-3 border-top"><a href="login.html" class="text-secondary text-decoration-none">← Quay lại trang đăng nhập</a></div>
         </div>
     </main>
-    <script src="common.js"></script>
-    <script>
-        let submittedEmail = '';
-        let cooldownTimer = null;
-
-        // Hàm đếm ngược
-        function startCooldown(btn, seconds) {
-            let timeLeft = seconds;
-            btn.disabled = true; 
-            const originalText = btn.dataset.label || btn.innerHTML;
-            
-            cooldownTimer = setInterval(() => {
-                btn.textContent = `Gửi lại sau ${timeLeft} giây`;
-                timeLeft--;
-
-                if (timeLeft < 0) {
-                    clearInterval(cooldownTimer);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
-            }, 1000);
-        }
-
-        document.getElementById('requestOtpForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            submittedEmail = document.getElementById('targetEmail').value.trim();
-            const btn = document.getElementById('btnSendOtp');
-            
-            setBusy(btn, true, 'Đang gửi mã...');
-            
-            try {
-                await api('/api/auth/forgot-password', { method: 'POST', redirectOn401: false, json: { email: submittedEmail } });
-                
-                document.getElementById('displayEmail').textContent = submittedEmail;
-                document.getElementById('step1').classList.add('d-none');
-                document.getElementById('step2').classList.remove('d-none');
-                document.getElementById('otpCode').focus();
-                
-                // Khóa nút 60 giây khi thành công
-                startCooldown(btn, 60);
-                
-            } catch (err) {
-                notify(err.message);
-                // Khóa nút 30 giây nếu có lỗi
-                startCooldown(btn, 30);
-            }
-        });
-
-        document.getElementById('verifyOtpForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnVerify');
-            setBusy(btn, true, 'Đang xử lý...');
-            try {
-                const data = await api('/api/auth/verify-otp-reset', {
-                    method: 'POST', redirectOn401: false,
-                    json: { email: submittedEmail, otp: document.getElementById('otpCode').value, new_password: document.getElementById('newPassword').value }
-                });
-                notify(data.message, 'success', 3000);
-                setTimeout(() => { location.href = 'login.html'; }, 1500);
-            } catch (err) {
-                notify(err.message);
-                setBusy(btn, false);
-            }
-        });
-
-        document.getElementById('backToStep1').addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('step2').classList.add('d-none');
-            document.getElementById('step1').classList.remove('d-none');
-        });
-    </script>
 </body>
 </html>
