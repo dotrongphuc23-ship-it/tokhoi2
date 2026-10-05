@@ -100,24 +100,56 @@
             teacherInputs.forEach(inp => isTeacher ? inp.setAttribute('required', 'true') : inp.removeAttribute('required'));
         });
 
+        // --- HÀM ĐẾM NGƯỢC THỜI GIAN CHỜ ---
+        let cooldownTimer = null;
+
+        function startCooldown(btn, seconds) {
+            let timeLeft = seconds;
+            btn.disabled = true; 
+            
+            // Lưu lại trạng thái gốc của nút
+            const originalText = btn.dataset.label || btn.innerHTML;
+            
+            cooldownTimer = setInterval(() => {
+                btn.textContent = `Gửi lại sau ${timeLeft} giây`;
+                timeLeft--;
+
+                if (timeLeft < 0) {
+                    clearInterval(cooldownTimer);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+
         document.getElementById('btnSendOtp').addEventListener('click', async () => {
             const form = document.getElementById('regForm');
             if (!form.checkValidity()) { form.reportValidity(); return; }
 
             const btn = document.getElementById('btnSendOtp');
             const email = document.getElementById('email').value.trim();
+            
+            // Báo hiệu đang xử lý
             setBusy(btn, true, 'Đang gửi mã OTP...');
             
             try {
                 await api('/api/auth/register-otp', { method: 'POST', redirectOn401: false, json: { email: email } });
+                
                 document.getElementById('displayEmail').textContent = email;
                 document.getElementById('step1').classList.add('d-none');
                 document.getElementById('step2').classList.remove('d-none');
                 document.getElementById('otpCode').setAttribute('required', 'true');
                 document.getElementById('password').setAttribute('required', 'true');
                 document.getElementById('otpCode').focus();
-            } catch (err) { notify(err.message); }
-            setBusy(btn, false);
+
+                // Khóa nút 60 giây khi thành công
+                startCooldown(btn, 60);
+
+            } catch (err) { 
+                notify(err.message); 
+                // Phạt chờ 30 giây nếu lỗi hoặc spam
+                startCooldown(btn, 30);
+            }
         });
 
         document.getElementById('btnBackToStep1').addEventListener('click', (e) => {

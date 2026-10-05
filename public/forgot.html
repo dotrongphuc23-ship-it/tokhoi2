@@ -51,22 +51,49 @@
     <script src="common.js"></script>
     <script>
         let submittedEmail = '';
+        let cooldownTimer = null;
+
+        // Hàm đếm ngược
+        function startCooldown(btn, seconds) {
+            let timeLeft = seconds;
+            btn.disabled = true; 
+            const originalText = btn.dataset.label || btn.innerHTML;
+            
+            cooldownTimer = setInterval(() => {
+                btn.textContent = `Gửi lại sau ${timeLeft} giây`;
+                timeLeft--;
+
+                if (timeLeft < 0) {
+                    clearInterval(cooldownTimer);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
 
         document.getElementById('requestOtpForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             submittedEmail = document.getElementById('targetEmail').value.trim();
             const btn = document.getElementById('btnSendOtp');
+            
             setBusy(btn, true, 'Đang gửi mã...');
+            
             try {
                 await api('/api/auth/forgot-password', { method: 'POST', redirectOn401: false, json: { email: submittedEmail } });
+                
                 document.getElementById('displayEmail').textContent = submittedEmail;
                 document.getElementById('step1').classList.add('d-none');
                 document.getElementById('step2').classList.remove('d-none');
                 document.getElementById('otpCode').focus();
+                
+                // Khóa nút 60 giây khi thành công
+                startCooldown(btn, 60);
+                
             } catch (err) {
                 notify(err.message);
+                // Khóa nút 30 giây nếu có lỗi
+                startCooldown(btn, 30);
             }
-            setBusy(btn, false);
         });
 
         document.getElementById('verifyOtpForm').addEventListener('submit', async (e) => {

@@ -4,24 +4,28 @@
   "description": "",
   "main": "forgot-password.js",
   "scripts": {
-  "start": "node server.js",
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "@ngrok/ngrok": "^1.7.0",
     "@supabase/supabase-js": "^2.117.2",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^18.0.5",
+    "expo": "^57.0.26",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.4.0",
     "nodemailer": "^10.0.13",
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "react-native-webview": "13.16.1"
   }
 }
