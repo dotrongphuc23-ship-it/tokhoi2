@@ -13,7 +13,6 @@
     <link href="common.css" rel="stylesheet">
 </head>
 <body>
-    <!-- HEADER -->
     <div class="container-xl px-md-4 mt-4 mb-3">
         <div id="topBannerImage" class="banner-frame shadow-sm" role="img" aria-label="Ảnh bìa" style="display: none;">
             <img id="bannerImg" alt="" draggable="false">
@@ -46,10 +45,8 @@
         </header>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="container-xl px-md-4 pb-5">
         <div class="row mt-4">
-            <!-- SIDEBAR -->
             <div class="col-lg-3 col-xl-3 mb-4">
                 <div class="offcanvas-lg offcanvas-start bg-body h-100 border-0" tabindex="-1" id="sidebarMenu">
                     <div class="offcanvas-header border-bottom">
@@ -80,10 +77,8 @@
                 </div>
             </div>
             
-            <!-- THƯ VIỆN & THỜI KHÓA BIỂU -->
             <div class="col-lg-9 col-xl-9">
                 <div id="sec-library">
-                    <!-- THANH TÌM KIẾM VÀ LỌC -->
                     <div class="sticky-search shadow-sm rounded-4 px-3 py-3 mb-4 d-flex flex-column flex-lg-row gap-3 align-items-center">
                         <div class="flex-grow-1 w-100">
                             <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border bg-body-tertiary">
@@ -93,7 +88,12 @@
                         </div>
                         <div style="min-width: 150px;" class="w-100 w-lg-auto" id="gradeFilterContainer">
                             <select id="gradeFilter" class="form-select form-select-lg bg-body-tertiary border shadow-sm rounded-pill">
-                                <option value="">Tất cả Khối</option><option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option><option value="4">Khối 4</option><option value="5">Khối 5</option>
+                                <option value="">Tất cả Khối</option>
+                                <option value="1">Khối 1</option>
+                                <option value="2">Khối 2</option>
+                                <option value="3">Khối 3</option>
+                                <option value="4">Khối 4</option>
+                                <option value="5">Khối 5</option>
                             </select>
                         </div>
                         <div style="min-width: 180px;" class="w-100 w-lg-auto" id="subjectFilterContainer">
@@ -133,7 +133,6 @@
         </div>
     </div>
 
-    <!-- THANH CÔNG CỤ BULK ACTION -->
     <div id="bulkActionBar" class="fixed-bottom bg-dark text-white p-3 d-none shadow-lg d-flex justify-content-between align-items-center" style="z-index: 1050; border-radius: 20px 20px 0 0;">
         <div>Đã chọn <span id="bulkCount" class="fw-bold text-warning fs-5">0</span> tài liệu</div>
         <div>
@@ -142,7 +141,7 @@
         </div>
     </div>
 
-    <!-- CÁC MODAL HỆ THỐNG -->
+    <!-- MODAL THÔNG BÁO -->
     <div class="modal fade" id="notificationsModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content bg-body">
@@ -157,41 +156,82 @@
         </div>
     </div>
 
-    <div class="modal fade" id="profileModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content bg-body">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title fw-bold"><i class="fa fa-user-edit text-primary me-2"></i> Thông tin cá nhân</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="profileForm">
-                    <div class="modal-body">
-                        <div class="alert alert-info small py-2 border-0 shadow-sm">Để trống trường Mật khẩu nếu không muốn đổi.</div>
-                        <label class="fw-bold mb-1 small">Họ và tên <span class="text-danger">*</span></label>
-                        <input type="text" id="profName" class="form-control bg-body-tertiary mb-2 border-0" required>
+    
+    <!-- MODAL HỒ SƠ CÁ NHÂN -->
+<div class="modal fade" id="profileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-body">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="fa fa-user-edit text-primary me-2"></i> Thông tin cá nhân</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="profileForm">
+                <div class="modal-body">
+                    <div class="alert alert-info small py-2 border-0 shadow-sm">Để trống trường Mật khẩu nếu không muốn đổi. Không thể thay đổi Email và Số điện thoại.</div>
+                    
+                    <div class="mb-2">
+                        <label class="fw-bold mb-1 small">Email đăng nhập</label>
+                        <input type="email" id="profEmail" class="form-control bg-body-tertiary border-0 text-muted" readonly disabled>
+                    </div>
+
+                    <label class="fw-bold mb-1 small">Họ và tên (Tài khoản) <span class="text-danger">*</span></label>
+                    <input type="text" id="profName" class="form-control bg-body-tertiary mb-2 border-0" required>
+                    
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <label class="fw-bold mb-1 small">Ngày sinh</label>
+                            <input type="date" id="profDob" class="form-control bg-body-tertiary border-0">
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="fw-bold mb-1 small">Số điện thoại</label>
+                            <input type="tel" id="profPhone" class="form-control bg-body-tertiary border-0 text-muted" readonly disabled>
+                        </div>
+                    </div>
+
+                    <!-- VÙNG CỦA GIÁO VIÊN / ADMIN -->
+                    <div id="profTeacherFields" class="d-none">
                         <div class="row">
                             <div class="col-6 mb-2">
-                                <label class="fw-bold mb-1 small">Ngày sinh</label>
-                                <input type="date" id="profDob" class="form-control bg-body-tertiary border-0">
+                                <label class="fw-bold mb-1 small">Đơn vị công tác</label>
+                                <input type="text" id="profWorkplace" class="form-control bg-body-tertiary border-0">
                             </div>
                             <div class="col-6 mb-2">
-                                <label class="fw-bold mb-1 small">Số điện thoại</label>
-                                <input type="tel" id="profPhone" class="form-control bg-body-tertiary border-0">
+                                <label class="fw-bold mb-1 small">Chức vụ</label>
+                                <input type="text" id="profPosition" class="form-control bg-body-tertiary border-0">
                             </div>
                         </div>
-                        <label class="fw-bold mb-1 small">Đơn vị công tác</label>
-                        <input type="text" id="profWorkplace" class="form-control bg-body-tertiary mb-2 border-0">
-                        <label class="fw-bold mb-1 small">Đổi mật khẩu mới</label>
-                        <input type="password" id="profPassword" class="form-control bg-body-tertiary mb-2 border-0" minlength="6" placeholder="Bỏ trống nếu giữ nguyên">
                     </div>
-                    <div class="modal-footer border-0">
-                        <button type="submit" id="btnSaveProfile" class="btn btn-brand rounded-pill w-100 fw-bold">Lưu thay đổi</button>
+
+                    <!-- VÙNG CỦA HỌC SINH CỦA ADMIN QUẢN LÝ -->
+                    <div id="profStudentFields" class="d-none p-3 bg-primary-subtle rounded-3 mb-2 mt-2">
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <label class="fw-bold mb-1 small">Học sinh lớp</label>
+                                <input type="text" id="profClassName" class="form-control bg-body border-0 form-control-sm">
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="fw-bold mb-1 small">GV Chủ nhiệm</label>
+                                <input type="text" id="profHomeroom" class="form-control bg-body border-0 form-control-sm">
+                            </div>
+                            <div class="col-12">
+                                <label class="fw-bold mb-1 small">Họ tên Phụ huynh</label>
+                                <input type="text" id="profParentName" class="form-control bg-body border-0 form-control-sm">
+                            </div>
+                        </div>
                     </div>
-                </form>
-            </div>
+
+                    <label class="fw-bold mb-1 small mt-2">Đổi mật khẩu mới</label>
+                    <input type="password" id="profPassword" class="form-control bg-body-tertiary mb-2 border-0" minlength="6" placeholder="Bỏ trống nếu giữ nguyên">
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" id="btnSaveProfile" class="btn btn-brand rounded-pill w-100 fw-bold">Lưu thay đổi</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
+    <!-- CÁC MODAL HỆ THỐNG CŨ -->
     <div class="modal fade" id="trashModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
             <div class="modal-content bg-body">
@@ -323,7 +363,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-2 mb-3"><div class="col"><div class="input-group rounded-pill border overflow-hidden"><span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="fa fa-search"></i></span><input type="search" id="studentSearch" class="form-control bg-body-tertiary border-0" placeholder="Tìm theo tên hoặc email..."></div></div><div class="col-auto"><button type="button" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold" id="btnExportStudents"><i class="fa fa-file-excel me-1"></i> Xuất Excel</button></div></div>
-                    <div class="table-responsive bg-body rounded-3 shadow-sm border"><table class="table table-hover align-middle text-center text-nowrap mb-0"><thead class="table-light"><tr><th>Họ tên</th><th>Email</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody id="studentsListBody"></tbody></table></div>
+                    <div class="table-responsive bg-body rounded-3 shadow-sm border"><table class="table table-hover align-middle text-center text-nowrap mb-0"><thead class="table-light"><tr><th>Họ tên</th><th>Lớp</th><th>Email</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody id="studentsListBody"></tbody></table></div>
                     <div class="d-flex justify-content-center mt-4" id="studentsPager"></div>
                 </div>
             </div>
@@ -364,10 +404,11 @@
         </div>
     </div>
 
-    <!-- SCRIPTS MỚI - ĐỊNH DẠNG TỪNG DÒNG RÕ RÀNG TRÁNH LỖI CÚ PHÁP -->
+    <!-- JAVASCRIPT CHÍNH -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="common.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <script>
         let currentUser = null;
         let currentGrade = '', currentCategory = 'bai_giang', currentSubject = '', currentWeek = '', currentPage = 1;
@@ -385,7 +426,14 @@
 
         // --- 1. LƯU & TẢI TRẠNG THÁI TÌM KIẾM ---
         function saveState() {
-            const state = { currentCategory, currentGrade, currentSubject, currentWeek, currentPage, search: $('searchInput').value };
+            const state = { 
+                currentCategory, 
+                currentGrade, 
+                currentSubject, 
+                currentWeek, 
+                currentPage, 
+                search: $('searchInput').value 
+            };
             sessionStorage.setItem('portalApp_State', JSON.stringify(state));
         }
 
@@ -448,7 +496,7 @@
             } catch(e) {}
         }
 
-        // --- 2. CÀI ĐẶT ẢNH BÌA & SETTINGS ---
+        // --- 2. CÀI ĐẶT ẢNH BÌA ---
         const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
         const bannerEd = { x: 50, y: 50, z: 1, w: 0, h: 0, objectUrl: '', fit: 'cover' };
         let savedBanner = { url: '', x: 50, y: 50, z: 1, fit: 'cover' };
@@ -479,6 +527,7 @@
             
             if (!on) return;
             Object.assign(bannerEd, { x, y, z, w: 0, h: 0, fit: fit || 'cover' });
+            
             const img = $('bannerEditImg'); 
             img.onload = () => { bannerEd.w = img.naturalWidth; bannerEd.h = img.naturalHeight; };
             img.src = src; 
@@ -630,58 +679,65 @@
         }
 
         function renderUser() {
-            let roleText = '🎒 Phụ huynh / Học sinh', nameDisplay = currentUser.name || 'Người dùng';
-            const isManager = isAdmin() || currentUser.can_manage_docs;
-            
-            if (currentUser.role === 'teacher') roleText = '👨‍‍🏫 Giáo viên'; 
-            if (isAdmin()) { roleText = '👑 Quản trị viên'; nameDisplay = 'Đỗ Ngọc Thương'; }
+    let roleText = '🎒 Phụ huynh / Học sinh', nameDisplay = currentUser.name || currentUser.full_name || 'Người dùng';
+    const isManager = isAdmin() || currentUser.can_manage_docs;
+    
+    if (currentUser.role === 'teacher') roleText = '👨🏫 Giáo viên'; 
+    if (isAdmin()) { roleText = '👑 Quản trị viên'; nameDisplay = 'Đỗ Ngọc Thương'; }
 
-            $('userMenuArea').innerHTML = `
-                <div class="dropdown d-inline-block">
-                    <button class="btn btn-light rounded-pill shadow-sm dropdown-toggle fw-bold d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" title="Menu Tài Khoản">
-                        <i class="fa fa-user-circle text-primary fs-5"></i> <span class="text-truncate text-body" style="max-width: 150px;">${escapeHtml(nameDisplay)}</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2">
-                        <li><h6 class="dropdown-header fw-bold text-uppercase text-primary">${roleText}</h6></li>
-                        <li><button class="dropdown-item py-2 fw-bold" type="button" data-act="profile"><i class="fa fa-user-edit text-success fa-fw me-2"></i> Hồ sơ cá nhân</button></li>
-                        <li><hr class="dropdown-divider"></li>
-                        ${isAdmin() ? `
-                        <li><button class="dropdown-item py-2" type="button" data-act="settings"><i class="fa fa-cog text-secondary fa-fw me-2"></i> Cài đặt trường</button></li>
-                        <li><button class="dropdown-item py-2" type="button" data-act="classes"><i class="fa fa-school text-primary fa-fw me-2"></i> Lớp học</button></li>
-                        <li><button class="dropdown-item py-2" type="button" data-act="teachers"><i class="fa fa-users text-info fa-fw me-2"></i> DS giáo viên</button></li>
-                        <li><button class="dropdown-item py-2" type="button" data-act="students"><i class="fa fa-user-graduate text-success fa-fw me-2"></i> DS học sinh</button></li>
-                        <li><button class="dropdown-item py-2" type="button" data-act="pending"><i class="fa fa-user-check text-warning fa-fw me-2"></i> Duyệt GV <span id="pendingCountBadge" class="badge bg-danger ms-1 d-none">0</span></button></li>
-                        <li><hr class="dropdown-divider"></li>` : ''}
-                        ${isManager ? `<li><button class="dropdown-item py-2" type="button" data-act="trash"><i class="fa fa-trash text-danger fa-fw me-2"></i> Thùng rác</button></li><li><hr class="dropdown-divider"></li>` : ''}
-                        <li><button class="dropdown-item text-danger fw-bold py-2" type="button" id="btnLogout"><i class="fa fa-sign-out-alt fa-fw me-2"></i> Đăng xuất</button></li>
-                    </ul>
-                </div>
-            `;
-            
-            $('btnLogout').addEventListener('click', logout);
-            
-            if (isAdmin() || currentUser.role === 'teacher') {
-                const uploadBtn = document.createElement('a'); 
-                uploadBtn.href = 'upload.html'; 
-                uploadBtn.className = 'btn btn-danger rounded-circle shadow-sm me-1'; 
-                uploadBtn.innerHTML = '<i class="fa fa-upload"></i>'; 
-                uploadBtn.title = 'Tải tài liệu lên';
-                $('headerActionArea').insertBefore(uploadBtn, $('headerActionArea').firstChild);
-                
-                if ($('btnCreateAlbum')) $('btnCreateAlbum').classList.remove('d-none');
-                if(isAdmin()) { 
-                    $('masterAdminEditScheduleBtn').innerHTML = '<button type="button" class="btn btn-danger btn-sm ms-2 rounded-pill shadow-sm" id="btnEditSchedule"><i class="fa fa-pencil-alt"></i> Sửa lịch</button>'; 
-                    checkPendingCount(); 
-                    setInterval(() => { if (!document.hidden) checkPendingCount(); }, 60000); 
-                }
-            } else { 
-                ['nav-ke-hoach-giang-day', 'nav-ke-hoach-day-hoc', 'nav-de-kiem-tra', 'nav-tich-hop', 'nav-kh-chuyen-mon', 'nav-kh-gd-khoi-2', 'nav-vb-chuyen-mon'].forEach(id => { 
-                    if($(id)) $(id).classList.add('d-none'); 
-                }); 
-            }
-            
-            fetchNotifications();
+    const profileMenu = currentUser.role !== 'student' 
+        ? `<li><button class="dropdown-item py-2 fw-bold" type="button" data-act="profile"><i class="fa fa-user-edit text-success fa-fw me-2"></i> Hồ sơ cá nhân</button></li><li><hr class="dropdown-divider"></li>` 
+        : '';
+
+    $('userMenuArea').innerHTML = `
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-light rounded-pill shadow-sm dropdown-toggle fw-bold d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" title="Menu Tài Khoản">
+                <i class="fa fa-user-circle text-primary fs-5"></i> <span class="text-truncate text-body" style="max-width: 150px;">${escapeHtml(nameDisplay)}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2">
+                <li><h6 class="dropdown-header fw-bold text-uppercase text-primary">${roleText}</h6></li>
+                ${profileMenu}
+                ${isAdmin() ? `
+                <li><button class="dropdown-item py-2" type="button" data-act="settings"><i class="fa fa-cog text-secondary fa-fw me-2"></i> Cài đặt trường</button></li>
+                <li><button class="dropdown-item py-2" type="button" data-act="classes"><i class="fa fa-school text-primary fa-fw me-2"></i> Lớp học</button></li>
+                <li><button class="dropdown-item py-2" type="button" data-act="teachers"><i class="fa fa-users text-info fa-fw me-2"></i> DS giáo viên</button></li>
+                <li><button class="dropdown-item py-2" type="button" data-act="students"><i class="fa fa-user-graduate text-success fa-fw me-2"></i> DS học sinh</button></li>
+                <li><button class="dropdown-item py-2" type="button" data-act="pending"><i class="fa fa-user-check text-warning fa-fw me-2"></i> Duyệt GV <span id="pendingCountBadge" class="badge bg-danger ms-1 d-none">0</span></button></li>
+                <li><hr class="dropdown-divider"></li>` : ''}
+                ${isManager ? `<li><button class="dropdown-item py-2" type="button" data-act="trash"><i class="fa fa-trash text-danger fa-fw me-2"></i> Thùng rác</button></li><li><hr class="dropdown-divider"></li>` : ''}
+                <li><button class="dropdown-item text-danger fw-bold py-2" type="button" id="btnLogout"><i class="fa fa-sign-out-alt fa-fw me-2"></i> Đăng xuất</button></li>
+            </ul>
+        </div>
+    `;
+    
+    $('btnLogout').addEventListener('click', logout);
+    
+    if (isAdmin() || currentUser.role === 'teacher') {
+        // Kiểm tra tránh tạo ra nút upload thứ 2
+        if (!document.getElementById('btnUploadAction')) {
+            const uploadBtn = document.createElement('a'); 
+            uploadBtn.id = 'btnUploadAction';
+            uploadBtn.href = 'upload.html'; 
+            uploadBtn.className = 'btn btn-danger rounded-circle shadow-sm me-1'; 
+            uploadBtn.innerHTML = '<i class="fa fa-upload"></i>'; 
+            uploadBtn.title = 'Tải tài liệu lên';
+            $('headerActionArea').insertBefore(uploadBtn,$('headerActionArea').firstChild);
         }
+        
+        if ($('btnCreateAlbum'))$('btnCreateAlbum').classList.remove('d-none');
+        if(isAdmin()) { 
+            $('masterAdminEditScheduleBtn').innerHTML = '<button type="button" class="btn btn-danger btn-sm ms-2 rounded-pill shadow-sm" id="btnEditSchedule"><i class="fa fa-pencil-alt"></i> Sửa lịch</button>'; 
+            checkPendingCount(); 
+            setInterval(() => { if (!document.hidden) checkPendingCount(); }, 60000); 
+        }
+    } else { 
+        ['nav-ke-hoach-giang-day', 'nav-ke-hoach-day-hoc', 'nav-de-kiem-tra', 'nav-tich-hop', 'nav-kh-chuyen-mon', 'nav-kh-gd-khoi-2', 'nav-vb-chuyen-mon'].forEach(id => { 
+            if($(id))$(id).classList.add('d-none'); 
+        }); 
+    }
+    
+    fetchNotifications();
+}
 
         // --- 4. TÀI LIỆU (LECTURES) ---
         function updateBulkBar() { 
@@ -717,8 +773,9 @@
             const isChecked = checkedIds.has(id) ? 'checked' : '';
             const checkboxHtml = canManage ? `<div class="position-absolute" style="top: 15px; right: 15px; z-index: 10;"><input type="checkbox" class="form-check-input lecture-checkbox shadow" value="${id}" ${isChecked}></div>` : '';
 
+            // Đưa tim xuống góc dưới ngang hàng "Vào xem"
             const heartClass = item.is_bookmarked ? 'fa-solid text-danger' : 'fa-regular text-secondary';
-            const heartBtn = `<button class="btn btn-sm btn-light border rounded-circle shadow-sm position-absolute d-flex justify-content-center align-items-center" style="top:15px; left:15px; z-index:10; width: 34px; height: 34px;" onclick="toggleBookmark(${id}, this)"><i class="fa fa-heart ${heartClass}"></i></button>`;
+            const heartBtnInline = `<button type="button" class="btn btn-sm btn-light border fw-bold rounded-pill px-3 shadow-sm" onclick="toggleBookmark(${id}, this)" title="Lưu tài liệu này"><i class="fa fa-heart ${heartClass}"></i></button>`;
 
             if (item.category_type === 'thu_vien_hinh_anh') {
                 const isImg = ['jpg','jpeg','png','webp'].includes(item.file_type); 
@@ -728,8 +785,8 @@
                 
                 return `
                 <div class="col-md-6 col-lg-4 col-xl-4 mb-4 position-relative">
-                    ${checkboxHtml}${heartBtn}
-                    <div class="card border-0 h-100 album-card bg-body">
+                    ${checkboxHtml}
+                    <div class="card border-0 h-100 album-card bg-body shadow-sm">
                         <a href="view.html?id=${id}" class="d-block album-img-wrapper" style="background-image: url('${escapeHtml(thumb)}'); border-radius: 15px 15px 0 0;"></a>
                         <div class="p-3 d-flex flex-column h-100 rounded-bottom-4">
                             <h3 class="h6 fw-bold text-truncate mb-1" title="${escapeHtml(item.title)}">
@@ -737,7 +794,9 @@
                             </h3>
                             <small class="text-secondary mb-3"><i class="fa fa-folder-open text-warning me-1"></i> ${escapeHtml(item.subject || 'Album chung')}</small>
                             <div class="d-flex gap-2 mt-auto">
-                                ${canManage ? `<button type="button" class="btn btn-sm btn-light flex-grow-1 border fw-bold" data-action="edit" data-id="${id}">Sửa</button><button type="button" class="btn btn-sm btn-outline-danger flex-grow-1 fw-bold" data-action="delete" data-id="${id}">Xóa</button>` : ''}
+                                <a href="view.html?id=${id}" class="btn btn-sm btn-primary flex-grow-1 fw-bold rounded-pill shadow-sm">Vào xem</a>
+                                ${heartBtnInline}
+                                ${canManage ? `<button type="button" class="btn btn-sm btn-light border fw-bold rounded-pill px-3 shadow-sm" data-action="edit" data-id="${id}"><i class="fa fa-pencil-alt"></i></button><button type="button" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3 shadow-sm" data-action="delete" data-id="${id}"><i class="fa fa-trash"></i></button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -758,8 +817,8 @@
 
             return `
             <div class="col-md-6 col-lg-4 col-xl-4 mb-4 position-relative">
-                ${checkboxHtml}${heartBtn}
-                <div class="card p-3 border h-100 bg-body">
+                ${checkboxHtml}
+                <div class="card p-3 border h-100 bg-body shadow-sm">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="d-flex gap-2 align-items-center"><span class="fs-3 lh-1">${getFileIcon(item.file_type, item.file_type==='url')}</span>${gradeBadge}</div>
                         <span class="badge bg-body-tertiary text-body border">${escapeHtml(CATEGORY_LABELS[item.category_type] || item.category_type)}</span>
@@ -768,8 +827,9 @@
                     <small class="text-secondary d-block mb-1"><i class="fa fa-user-circle me-1"></i> ${escapeHtml(item.author_name)}</small>
                     ${subjBadge}${weekBadge}
                     <div class="d-flex gap-2 mt-auto">
-                        <a href="view.html?id=${id}" class="btn btn-sm btn-primary flex-grow-1 fw-bold rounded-pill">Vào xem</a>
-                        ${canManage ? `<button type="button" class="btn btn-sm btn-light border fw-bold rounded-pill" data-action="edit" data-id="${id}"><i class="fa fa-pencil-alt"></i></button><button type="button" class="btn btn-sm btn-outline-danger fw-bold rounded-pill" data-action="delete" data-id="${id}"><i class="fa fa-trash"></i></button>` : ''}
+                        <a href="view.html?id=${id}" class="btn btn-sm btn-primary flex-grow-1 fw-bold rounded-pill shadow-sm">Vào xem</a>
+                        ${heartBtnInline}
+                        ${canManage ? `<button type="button" class="btn btn-sm btn-light border fw-bold rounded-pill px-3 shadow-sm" data-action="edit" data-id="${id}"><i class="fa fa-pencil-alt"></i></button><button type="button" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3 shadow-sm" data-action="delete" data-id="${id}"><i class="fa fa-trash"></i></button>` : ''}
                     </div>
                 </div>
             </div>`;
@@ -1092,7 +1152,14 @@
             const id = Number(s.id); 
             const status = s.is_locked ? '<span class="badge bg-danger">Đã khóa</span>' : presenceCell(s); 
             const lockBtn = s.is_locked ? `<button type="button" class="btn btn-outline-success btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="unlock">Mở khóa</button>` : `<button type="button" class="btn btn-outline-warning btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="lock">Khóa</button>`; 
-            return `<tr class="${s.is_locked ? 'table-secondary' : ''}"><td class="fw-bold">${escapeHtml(s.full_name)}</td><td>${escapeHtml(s.email)}</td><td class="text-center">${escapeHtml(new Date(s.created_at).toLocaleDateString('vi-VN'))}</td><td class="text-center text-nowrap">${status}</td><td class="text-center text-nowrap">${lockBtn}<button type="button" class="btn btn-outline-primary btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="reset_pw"><i class="fa fa-key"></i> Đặt lại MK</button><button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill" data-student="${id}" data-act="delete">Xóa</button></td></tr>`; 
+            return `<tr class="${s.is_locked ? 'table-secondary' : ''}">
+                <td class="fw-bold">${escapeHtml(s.full_name)}</td>
+                <td class="text-primary fw-bold text-center">${escapeHtml(s.class_name || '-')}</td>
+                <td>${escapeHtml(s.email)}</td>
+                <td class="text-center">${escapeHtml(new Date(s.created_at).toLocaleDateString('vi-VN'))}</td>
+                <td class="text-center text-nowrap">${status}</td>
+                <td class="text-center text-nowrap">${lockBtn}<button type="button" class="btn btn-outline-primary btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="reset_pw"><i class="fa fa-key"></i></button><button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill" data-student="${id}" data-act="delete"><i class="fa fa-trash"></i></button></td>
+            </tr>`; 
         }
 
         async function loadStudents() { 
@@ -1111,7 +1178,7 @@
                 } 
                 
                 $('studentsOnlineCount').textContent = `(${data.online} đang online)`; 
-                tbody.innerHTML = data.items.length ? data.items.map(studentRow).join('') : `<tr><td colspan="5">${emptyStateHtml('🎒', 'Chưa có học sinh', 'Không tìm thấy dữ liệu học sinh.')}</td></tr>`; 
+                tbody.innerHTML = data.items.length ? data.items.map(studentRow).join('') : `<tr><td colspan="6">${emptyStateHtml('🎒', 'Chưa có học sinh', 'Không tìm thấy dữ liệu học sinh.')}</td></tr>`; 
                 $('studentsPager').innerHTML = data.total ? `<div class="d-flex align-items-center gap-3"><small class="text-muted fw-bold">${data.total} học sinh (Trang ${data.page}/${data.pages})</small><div class="btn-group shadow-sm"><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page - 1}" ${data.page <= 1 ? 'disabled' : ''}>&laquo; Trước</button><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page + 1}" ${data.page >= data.pages ? 'disabled' : ''}>Sau &raquo;</button></div></div>` : ''; 
             } catch (e) { 
                 if (seq !== studentSeq || e.status === 401) return; notify(e.message); 
@@ -1131,6 +1198,7 @@
 
         function manageStudent(id, action) { 
             if (action === 'reset_pw') { resetUserPassword(id); return; } 
+            
             const exec = async () => { 
                 try { 
                     if (action === 'delete') {
@@ -1163,9 +1231,17 @@
                 if (!items.length) { 
                     notify('Không có dữ liệu!'); 
                 } else { 
-                    const rows = items.map((s, i) => ({ 'STT': i + 1, 'Họ và tên': s.full_name || '', 'Email': s.email || '', 'Ngày đăng ký': new Date(s.created_at).toLocaleDateString('vi-VN'), 'Trạng thái': s.is_locked ? 'Đã khóa' : 'Hoạt động' })); 
+                    const rows = items.map((s, i) => ({ 
+                        'STT': i + 1, 
+                        'Họ và tên': s.full_name || '', 
+                        'Lớp': s.class_name || '',
+                        'Họ tên Phụ huynh': s.parent_name || '',
+                        'Email': s.email || '', 
+                        'Ngày đăng ký': new Date(s.created_at).toLocaleDateString('vi-VN'), 
+                        'Trạng thái': s.is_locked ? 'Đã khóa' : 'Hoạt động' 
+                    })); 
                     const ws = XLSX.utils.json_to_sheet(rows); 
-                    ws['!cols'] = [{wch: 5}, {wch: 28}, {wch: 32}, {wch: 15}, {wch: 12}]; 
+                    ws['!cols'] = [{wch: 5}, {wch: 28}, {wch: 15}, {wch: 28}, {wch: 32}, {wch: 15}, {wch: 12}]; 
                     const wb = XLSX.utils.book_new(); 
                     XLSX.utils.book_append_sheet(wb, ws, 'DanhSachHocSinh'); 
                     XLSX.writeFile(wb, `DSHS_${new Date().toISOString().slice(0, 10)}.xlsx`); 
@@ -1217,7 +1293,7 @@
             }
         }
         
-        // --- 6. GẮN SỰ KIỆN TƯƠNG TÁC (BIND EVENTS) ---
+        // --- 7. GẮN SỰ KIỆN TƯƠNG TÁC (BIND EVENTS) ---
         function bindEvents() {
             $('mainNav').addEventListener('click', (e) => { 
                 const btn = e.target.closest('button.nav-link'); 
@@ -1338,6 +1414,7 @@
             });
             
             $('btnExportStudents').addEventListener('click', exportStudents);
+            
             $('btnExportExcel').addEventListener('click', () => { 
                 if (!currentTeachersList || currentTeachersList.length === 0) { notify('Không có dữ liệu!'); return; } 
                 const data = currentTeachersList.map((t, index) => ({ 'STT': index + 1, 'Họ và tên': t.full_name || '', 'Email': t.email || '', 'Ngày sinh': t.dob || '', 'Số điện thoại': t.phone || '', 'Đơn vị công tác': t.workplace || '', 'Chức vụ': t.position || '' })); 
@@ -1427,40 +1504,75 @@
             });
 
             document.addEventListener('click', async (e) => {
-                const btn = e.target.closest('button[data-act="profile"]');
-                if (btn) {
-                    $('profName').value = currentUser.name || '';
-                    $('profPassword').value = '';
-                    $('profDob').value = ''; 
-                    $('profPhone').value = '';$('profWorkplace').value = '';
-                    
-                    if (isAdmin() || currentUser.role === 'teacher') {
-                        try {
-                            const teachers = await api('/api/admin/teachers');
-                            const userFull = teachers.find(u => u.id === currentUser.id);
-                            if (userFull) { 
-                                $('profDob').value = userFull.dob || ''; 
-                                $('profPhone').value = userFull.phone || '';$('profWorkplace').value = userFull.workplace || ''; 
-                            }
-                        } catch(err) {}
-                    }
-                    showModal('profileModal');
+    const btn = e.target.closest('button[data-act="profile"]');
+    if (btn) {
+        $('profName').value = currentUser.name || currentUser.full_name || '';
+        $('profEmail').value = currentUser.email || '';
+        $('profPassword').value = '';
+        $('profDob').value = ''; 
+        $('profPhone').value = ''; 
+        $('profWorkplace').value = '';
+        $('profPosition').value = '';
+        $('profClassName').value = '';
+        $('profHomeroom').value = '';
+        $('profParentName').value = '';
+        
+        try {
+            const { user } = await api('/api/me');
+            if (user) { 
+                $('profEmail').value = user.email || '';
+                $('profDob').value = user.dob || ''; 
+                $('profPhone').value = user.phone || ''; 
+                $('profWorkplace').value = user.workplace || ''; 
+                $('profPosition').value = user.position || '';
+                $('profClassName').value = user.class_name || ''; 
+                $('profHomeroom').value = user.homeroom_teacher || ''; 
+                $('profParentName').value = user.parent_name || ''; 
+                
+                if (user.role === 'student') {
+                    $('profTeacherFields').classList.add('d-none');
+                    $('profStudentFields').classList.remove('d-none');
+                } else {
+                    $('profTeacherFields').classList.remove('d-none');
+                    $('profStudentFields').classList.add('d-none');
                 }
-            });
+            }
+        } catch(err) {}
+        showModal('profileModal');
+    }
+});
             
             $('profileForm').addEventListener('submit', async (e) => {
-                e.preventDefault(); 
-                const btn = $('btnSaveProfile'); setBusy(btn, true, 'Đang lưu...');
-                try {
-                    await api('/api/me', { method: 'PUT', json: { full_name: $('profName').value, dob: $('profDob').value, phone:$('profPhone').value, workplace: $('profWorkplace').value, password:$('profPassword').value } });
-                    notify('Cập nhật hồ sơ thành công!', 'success'); 
-                    hideModal('profileModal');
-                    const res = await api('/api/me'); 
-                    localStorage.setItem('user', JSON.stringify(res.user)); 
-                    window.dispatchEvent(new CustomEvent('userUpdated', { detail: res.user })); 
-                } catch (err) { notify(err.message); } 
-                setBusy(btn, false);
-            });
+    e.preventDefault(); 
+    const btn = $('btnSaveProfile'); setBusy(btn, true, 'Đang lưu...');
+    try {
+        await api('/api/me', { 
+            method: 'PUT', 
+            json: { 
+                full_name: $('profName').value, 
+                dob: $('profDob').value, 
+                phone: $('profPhone').value, // Bị readonly nên vẫn giữ giá trị cũ
+                workplace: $('profWorkplace').value, 
+                position: $('profPosition').value,
+                class_name: $('profClassName').value, 
+                parent_name: $('profParentName').value, 
+                homeroom_teacher: $('profHomeroom').value, 
+                password: $('profPassword').value 
+            } 
+        });
+        notify('Cập nhật hồ sơ thành công!', 'success'); 
+        hideModal('profileModal');
+        
+        const res = await api('/api/me'); 
+        // Đồng bộ dữ liệu tên mới để renderUser nhận diện
+        res.user.name = res.user.full_name;
+        localStorage.setItem('user', JSON.stringify(res.user)); 
+        
+        currentUser = res.user;
+        renderUser();
+    } catch (err) { notify(err.message); } 
+    setBusy(btn, false);
+});
 
             $('editCategory').addEventListener('change', (e) => {
                 const val = e.target.value; 
@@ -1474,7 +1586,7 @@
             $('editLectureForm').addEventListener('submit', async (e) => {
                 e.preventDefault(); 
                 const cat = $('editCategory').value;
-                const payload = { title: $('editTitle').value, description:$('editDesc').value, category_type: cat };
+                const payload = { title: $('editTitle').value, description: $('editDesc').value, category_type: cat };
                 
                 if (cat === 'thu_vien_hinh_anh') { 
                     payload.grade = ''; 
@@ -1497,6 +1609,7 @@
                 } catch (err) { notify(err.message); }
             });
 
+            // Lắng nghe sự kiện hệ thống báo quyền từ Admin
             window.addEventListener('userUpdated', (e) => {
                 currentUser = e.detail;
                 if (currentUser.can_manage_docs) {
@@ -1507,7 +1620,8 @@
                 if (currentCategory) loadLectures(); 
             });
             
-            if ($('btnCreateAlbum')) {$('btnCreateAlbum').addEventListener('click', () => { 
+            if ($('btnCreateAlbum')) {
+                $('btnCreateAlbum').addEventListener('click', () => { 
                     showPrompt('Tạo Album mới', 'Vui lòng nhập tên Album ảnh bạn muốn tạo:', 'Ví dụ: Lễ hội mùa xuân 2026...', (albumName) => { 
                         if (albumName && albumName.trim()) location.href = `upload.html?cat=thu_vien_hinh_anh&album=${encodeURIComponent(albumName.trim())}`; 
                     }); 

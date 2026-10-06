@@ -201,7 +201,6 @@
                 document.getElementById('avgRatingDisplay').textContent = hasRatings ? `⭐ ${Number(item.avg_rating).toFixed(1)}` : 'Chưa có đánh giá';
                 document.getElementById('descDisplay').textContent = item.description || 'Không có mô tả chi tiết.';
 
-                // Cập nhật trạng thái nút Bookmark
                 const icon = document.getElementById('bookmarkIconView');
                 icon.className = item.is_bookmarked ? 'fa fa-heart fa-solid text-danger' : 'fa fa-heart fa-regular text-secondary';
 
@@ -234,7 +233,6 @@
             setBusy(btn, false);
         });
 
-        // Báo lỗi tài liệu
         document.getElementById('btnReport').addEventListener('click', () => {
             showConfirm('Báo cáo tài liệu lỗi', 'Nếu tài liệu này bị hỏng link, không xem được nội dung hoặc có nội dung không phù hợp, hãy gửi báo cáo để Ban quản trị xử lý nhé.', async () => {
                 try {
@@ -244,7 +242,6 @@
             }, 'Gửi báo cáo', 'warning');
         });
 
-        // Nút Bookmark ở trang chi tiết
         document.getElementById('btnBookmarkView').addEventListener('click', async () => {
             const icon = document.getElementById('bookmarkIconView'); 
             icon.className = 'fa fa-spinner fa-spin text-secondary';

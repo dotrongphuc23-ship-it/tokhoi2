@@ -13,6 +13,7 @@ const CATEGORY_LABELS = {
     van_ban_chuyen_mon: 'Văn bản chuyên môn', thu_vien_hinh_anh: 'Thư viện hình ảnh', ai: 'Trí tuệ nhân tạo (AI)' 
 };
 
+// Hàm tạo Option cho Tuần học
 function generateWeekOptions(selectedValue = '') {
     let html = '<option value="">Dùng chung (Không chọn)</option>';
     for (let i = 1; i <= 35; i++) {

@@ -96,6 +96,11 @@ const initDB = async () => {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen BIGINT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS is_locked BOOLEAN NOT NULL DEFAULT FALSE;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS can_manage_docs BOOLEAN NOT NULL DEFAULT FALSE;
+        
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS class_name VARCHAR(50);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_name VARCHAR(100);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS homeroom_teacher VARCHAR(100);
+
         ALTER TABLE settings ADD COLUMN IF NOT EXISTS banner_pos INT NOT NULL DEFAULT 50;
         ALTER TABLE settings ADD COLUMN IF NOT EXISTS banner_pos_x INT NOT NULL DEFAULT 50;
         ALTER TABLE settings ADD COLUMN IF NOT EXISTS banner_zoom INT NOT NULL DEFAULT 100;
@@ -227,36 +232,52 @@ app.post('/api/auth/logout', wrap(async (req, res) => {
     res.clearCookie('token', COOKIE_OPTS); res.json({ message: 'Đã đăng xuất.' });
 }));
 
-app.get('/api/me', verifyToken, (req, res) => res.json({ user: req.user }));
+app.get('/api/me', verifyToken, wrap(async (req, res) => {
+    const { rows } = await pool.query('SELECT id, full_name, email, role, status, dob, phone, workplace, position, class_name, parent_name, homeroom_teacher, can_manage_docs FROM users WHERE id = $1', [req.user.id]);
+    res.json({ user: rows[0] });
+}));
 
 app.post('/api/auth/register', registerLimiter, wrap(async (req, res) => {
-    const { full_name, email: rawEmail, password, role, dob, phone, workplace, position } = req.body;
+    const { full_name, email: rawEmail, password, role, dob, phone, workplace, position, class_name, parent_name, homeroom_teacher } = req.body;
     const email = normEmail(rawEmail); if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email không hợp lệ.' });
 
     const fullName = cleanStr(full_name); if (fullName.length < 2 || fullName.length > 100) return res.status(400).json({ error: 'Họ tên phải từ 2 đến 100 ký tự.' });
     const pwErr = validatePassword(password); if (pwErr) return res.status(400).json({ error: pwErr });
-    const isTeacher = role === 'teacher'; const hash = await bcrypt.hash(password, 10);
+    const isTeacher = role === 'teacher'; 
+    const isStudent = role === 'student';
+    const hash = await bcrypt.hash(password, 10);
     
-    // Kiểm tra Số điện thoại trùng
     const cleanPhoneStr = cleanStr(phone);
-    if (isTeacher && cleanPhoneStr) {
+    if (cleanPhoneStr) {
         const phoneCheck = await pool.query('SELECT id FROM users WHERE phone = $1', [cleanPhoneStr]);
         if (phoneCheck.rows.length > 0) return res.status(409).json({ error: 'Số điện thoại này đã được sử dụng.' });
     }
 
     try {
         await pool.query(
-            'INSERT INTO users (full_name, email, password_hash, role, status, dob, phone, workplace, position, can_manage_docs) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)',
-            [fullName, email, hash, isTeacher ? 'teacher' : 'student', isTeacher ? 'pending' : 'approved', isTeacher ? cleanStr(dob) : null, isTeacher ? cleanPhoneStr : null, isTeacher ? cleanStr(workplace) : null, isTeacher ? cleanStr(position) : null]
+            `INSERT INTO users (full_name, email, password_hash, role, status, dob, phone, workplace, position, class_name, parent_name, homeroom_teacher, can_manage_docs) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, false)`,
+            [
+                fullName, email, hash, 
+                isTeacher ? 'teacher' : 'student', 
+                isTeacher ? 'pending' : 'approved', 
+                cleanStr(dob) || null, 
+                cleanPhoneStr || null, 
+                isTeacher ? cleanStr(workplace) : null, 
+                isTeacher ? cleanStr(position) : null,
+                isStudent ? cleanStr(class_name) : null,
+                isStudent ? cleanStr(parent_name) : null,
+                isStudent ? cleanStr(homeroom_teacher) : null
+            ]
         );
     } catch (err) { if (err.code === '23505') return res.status(409).json({ error: 'Email này đã được đăng ký.' }); throw err; }
     res.json({ message: isTeacher ? 'Đăng ký thành công! Hồ sơ đang chờ Ban giám hiệu duyệt.' : 'Đăng ký thành công! Bạn có thể đăng nhập ngay.' });
 }));
 
 
-/* ================= API MỚI: HỒ SƠ & THÔNG BÁO & BOOKMARK ================= */
+/* ================= API HỒ SƠ & THÔNG BÁO & BOOKMARK ================= */
 app.put('/api/me', verifyToken, wrap(async (req, res) => {
-    const { full_name, dob, phone, workplace, position, password } = req.body;
+    const { full_name, dob, phone, workplace, position, class_name, parent_name, homeroom_teacher, password } = req.body;
     const fullName = cleanStr(full_name);
     if (fullName.length < 2) return res.status(400).json({ error: 'Họ tên quá ngắn.' });
 
@@ -266,15 +287,28 @@ app.put('/api/me', verifyToken, wrap(async (req, res) => {
         if (phoneCheck.rows.length > 0) return res.status(409).json({ error: 'Số điện thoại này đã được tài khoản khác sử dụng.' });
     }
 
-    let pwQuery = '', vals = [fullName, cleanStr(dob), cleanPhone, cleanStr(workplace), cleanStr(position), req.user.id];
+    let pwQuery = '', vals = [
+        fullName, cleanStr(dob), cleanPhone, 
+        cleanStr(workplace), cleanStr(position), 
+        cleanStr(class_name), cleanStr(parent_name), cleanStr(homeroom_teacher),
+        req.user.id
+    ];
+    
     if (password) {
         const pwErr = validatePassword(password);
         if (pwErr) return res.status(400).json({ error: pwErr });
-        pwQuery = ', password_hash = $7';
+        pwQuery = ', password_hash = $10';
         vals.push(await bcrypt.hash(password, 10));
     }
 
-    await pool.query(`UPDATE users SET full_name = $1, dob = $2, phone = $3, workplace = $4, position = $5 ${pwQuery} WHERE id = $6`, vals);
+    await pool.query(`UPDATE users SET full_name = $1, dob = $2, phone = $3, workplace = $4, position = $5, class_name = $6, parent_name = $7, homeroom_teacher = $8 ${pwQuery} WHERE id = $9`, vals);
+    
+    // Gửi thông báo cho Admin nếu là giáo viên sửa hồ sơ
+    if (req.user.role === 'teacher') {
+        const msg = `Giáo viên ${fullName} vừa cập nhật thông tin hồ sơ cá nhân.`;
+        await pool.query(`INSERT INTO notifications (user_id, type, content, target_url) SELECT id, 'system', $1, '#' FROM users WHERE role = 'master_admin'`, [msg]);
+    }
+
     res.json({ message: 'Cập nhật hồ sơ thành công!' });
 }));
 
@@ -367,7 +401,6 @@ app.post('/api/admin/teachers/:id/permission', verifyToken, requireAdmin, wrap(a
     const result = await pool.query("UPDATE users SET can_manage_docs = $1 WHERE id = $2 AND role = 'teacher'", [canManage, id]);
     if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy giáo viên.' });
 
-    // Gửi thông báo thay đổi quyền
     const msg = canManage ? 'Quản trị viên vừa cấp cho bạn quyền Sửa/Xóa tài liệu.' : 'Quyền Sửa/Xóa tài liệu của bạn đã bị thu hồi.';
     await pool.query('INSERT INTO notifications (user_id, type, content) VALUES ($1, $2, $3)', [id, 'permission', msg]);
 
@@ -386,18 +419,18 @@ app.post('/api/admin/users/:id/reset-password', verifyToken, requireAdmin, wrap(
     try {
         const hash = await bcrypt.hash(req.body.new_password, 10);
         const result = await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2 AND role IN ('teacher', 'student')", [hash, id]);
-        if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy tài khoản giáo viên/học sinh hợp lệ (Không được đổi MK của Admin khác).' });
+        if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy tài khoản hợp lệ.' });
         res.json({ message: 'Đã đặt lại mật khẩu. Hãy báo mật khẩu mới cho người dùng.' });
     } catch(err) {
-        console.error("Lỗi đặt lại mật khẩu:", err);
-        return res.status(500).json({ error: 'Đã xảy ra sự cố phía máy chủ khi đặt lại mật khẩu.' });
+        return res.status(500).json({ error: 'Đã xảy ra sự cố phía máy chủ.' });
     }
 }));
 
 app.get('/api/admin/students', verifyToken, requireAdmin, wrap(async (req, res) => {
     const search = cleanStr(req.query.search).slice(0, 100); const vals = []; let where = "role = 'student'";
-    if (search) { vals.push('%' + search.replace(/[\\%_]/g, '\\$&') + '%'); where += ' AND (full_name ILIKE $1 OR email ILIKE $1)'; }
-    const cols = 'id, full_name, email, is_locked, last_seen, created_at';
+    if (search) { vals.push('%' + search.replace(/[\\%_]/g, '\\$&') + '%'); where += ' AND (full_name ILIKE $1 OR email ILIKE $1 OR class_name ILIKE $1)'; }
+    const cols = 'id, full_name, email, class_name, parent_name, is_locked, last_seen, created_at';
+    
     if (req.query.all === '1') { const { rows } = await pool.query(`SELECT ${cols} FROM users WHERE ${where} ORDER BY full_name, id LIMIT 5000`, vals); return res.json({ items: rows.map(withPresence) }); }
 
     const limit = Math.min(toInt(req.query.limit) || 15, 50), page = toInt(req.query.page) || 1;
@@ -532,7 +565,6 @@ app.post('/api/lectures/:id/reviews', verifyToken, wrap(async (req, res) => {
     try { await pool.query('INSERT INTO reviews (lecture_id, user_id, author_name, stars, comment) VALUES ($1, $2, $3, $4, $5)', [id, req.user.id, req.user.name, stars, comment]); } catch (err) { if (err.code === '23505') return res.status(409).json({ error: 'Bạn đã đánh giá tài liệu này rồi.' }); throw err; }
     await pool.query('UPDATE lectures SET avg_rating = (SELECT ROUND(AVG(stars)::numeric, 1) FROM reviews WHERE lecture_id = $1) WHERE id = $1', [id]); 
 
-    // Gửi thông báo cho tác giả
     if (lec.rows[0].author_id && lec.rows[0].author_id !== req.user.id) {
         const revMsg = `${req.user.name} vừa để lại đánh giá ${stars} sao cho tài liệu của bạn.`;
         await pool.query('INSERT INTO notifications (user_id, type, content, target_url) VALUES ($1, $2, $3, $4)', [lec.rows[0].author_id, 'review', revMsg, `/view.html?id=${id}`]);

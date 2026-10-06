@@ -26,27 +26,49 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="full_name" class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                        <label for="full_name" class="form-label fw-bold">Họ và tên (Của tài khoản) <span class="text-danger">*</span></label>
                         <input type="text" id="full_name" class="form-control" required minlength="2" placeholder="Ví dụ: Lê Bảo">
+                    </div>
+
+                    <!-- Box dành cho Học sinh / Phụ huynh -->
+                    <div id="studentBox" class="bg-primary-subtle p-3 rounded mb-3 border">
+                        <h6 class="fw-bold text-primary mb-2"><i class="fa fa-info-circle"></i> Thông tin lớp học</h6>
+                        <div class="mb-2">
+                            <label for="class_name" class="form-label fw-bold small">Học sinh lớp <span class="text-danger">*</span></label>
+                            <input type="text" id="class_name" class="form-control form-control-sm student-input" placeholder="Ví dụ: 2A1" required>
+                        </div>
+                        <div class="mb-2">
+                            <label for="parent_name" class="form-label fw-bold small">Họ tên Phụ huynh (Hoặc người giám hộ)</label>
+                            <input type="text" id="parent_name" class="form-control form-control-sm student-input" placeholder="Ví dụ: Lê Văn A">
+                        </div>
+                        <div class="mb-2">
+                            <label for="homeroom_teacher" class="form-label fw-bold small">Giáo viên chủ nhiệm</label>
+                            <input type="text" id="homeroom_teacher" class="form-control form-control-sm student-input" placeholder="Ví dụ: Cô Lan">
+                        </div>
+                        <div class="mb-2">
+                            <label for="student_phone" class="form-label fw-bold small">Số điện thoại liên hệ (Tùy chọn)</label>
+                            <input type="tel" id="student_phone" class="form-control form-control-sm student-input" placeholder="09xxxxxxx">
+                        </div>
                     </div>
 
                     <!-- Box dành riêng cho giáo viên -->
                     <div id="teacherBox" class="d-none bg-light p-3 rounded mb-3 border">
+                        <h6 class="fw-bold text-secondary mb-2"><i class="fa fa-id-card"></i> Hồ sơ chuyên môn</h6>
                         <div class="mb-2">
                             <label for="dob" class="form-label fw-bold small">Ngày tháng năm sinh <span class="text-danger">*</span></label>
-                            <input type="date" id="dob" class="form-control form-control-sm">
+                            <input type="date" id="dob" class="form-control form-control-sm teacher-input">
                         </div>
                         <div class="mb-2">
-                            <label for="phone" class="form-label fw-bold small">Số điện thoại <span class="text-danger">*</span></label>
-                            <input type="tel" id="phone" class="form-control form-control-sm" placeholder="09xxxxxxx">
+                            <label for="teacher_phone" class="form-label fw-bold small">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" id="teacher_phone" class="form-control form-control-sm teacher-input" placeholder="09xxxxxxx">
                         </div>
                         <div class="mb-2">
                             <label for="workplace" class="form-label fw-bold small">Đơn vị công tác <span class="text-danger">*</span></label>
-                            <input type="text" id="workplace" class="form-control form-control-sm" placeholder="Trường Tiểu học...">
+                            <input type="text" id="workplace" class="form-control form-control-sm teacher-input" placeholder="Trường Tiểu học...">
                         </div>
                         <div class="mb-2">
                             <label for="position" class="form-label fw-bold small">Chức vụ <span class="text-danger">*</span></label>
-                            <input type="text" id="position" class="form-control form-control-sm" placeholder="Ví dụ: Giáo viên chủ nhiệm">
+                            <input type="text" id="position" class="form-control form-control-sm teacher-input" placeholder="Ví dụ: Giáo viên chủ nhiệm">
                         </div>
                     </div>
 
@@ -55,7 +77,6 @@
                         <input type="email" id="email" class="form-control" required placeholder="name@gmail.com">
                         <small class="text-muted d-block mt-1">Email dùng để đăng nhập.</small>
                     </div>
-
                 </div>
 
                 <div class="mb-4">
@@ -76,19 +97,26 @@
     <script>
         const roleSel = document.getElementById('role');
         const teacherBox = document.getElementById('teacherBox');
-        const teacherInputs = teacherBox.querySelectorAll('input');
+        const studentBox = document.getElementById('studentBox');
+        const teacherInputs = document.querySelectorAll('.teacher-input');
+        const studentInputs = document.querySelectorAll('.student-input');
 
-        // Hiện box Giáo viên và gắn required
         roleSel.addEventListener('change', () => {
             const isTeacher = roleSel.value === 'teacher';
             teacherBox.classList.toggle('d-none', !isTeacher);
+            studentBox.classList.toggle('d-none', isTeacher);
+            
             teacherInputs.forEach(inp => isTeacher ? inp.setAttribute('required', 'true') : inp.removeAttribute('required'));
+            document.getElementById('class_name').required = !isTeacher;
         });
 
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmitReg');
             setBusy(btn, true, 'Đang đăng ký...');
+            
+            const isTeacher = roleSel.value === 'teacher';
+            
             try {
                 const data = await api('/api/auth/register', {
                     method: 'POST', redirectOn401: false,
@@ -97,10 +125,13 @@
                         email: document.getElementById('email').value,
                         password: document.getElementById('password').value,
                         role: roleSel.value,
-                        dob: document.getElementById('dob').value,
-                        phone: document.getElementById('phone').value,
-                        workplace: document.getElementById('workplace').value,
-                        position: document.getElementById('position').value
+                        phone: isTeacher ? document.getElementById('teacher_phone').value : document.getElementById('student_phone').value,
+                        dob: isTeacher ? document.getElementById('dob').value : null,
+                        workplace: isTeacher ? document.getElementById('workplace').value : null,
+                        position: isTeacher ? document.getElementById('position').value : null,
+                        class_name: isTeacher ? null : document.getElementById('class_name').value,
+                        parent_name: isTeacher ? null : document.getElementById('parent_name').value,
+                        homeroom_teacher: isTeacher ? null : document.getElementById('homeroom_teacher').value
                     }
                 });
                 notify(data.message, 'success', 4000);
