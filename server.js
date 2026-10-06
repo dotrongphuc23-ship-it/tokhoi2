@@ -101,6 +101,10 @@ const initDB = async () => {
         ALTER TABLE settings ADD COLUMN IF NOT EXISTS banner_zoom INT NOT NULL DEFAULT 100;
         ALTER TABLE settings ADD COLUMN IF NOT EXISTS banner_fit VARCHAR(20) NOT NULL DEFAULT 'cover';
         ALTER TABLE settings ADD COLUMN IF NOT EXISTS logo_url TEXT;
+
+        CREATE TABLE IF NOT EXISTS notifications (id SERIAL PRIMARY KEY, user_id INT REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), content TEXT, target_url VARCHAR(255), is_read BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS bookmarks (id SERIAL PRIMARY KEY, user_id INT REFERENCES users(id) ON DELETE CASCADE, lecture_id INT REFERENCES lectures(id) ON DELETE CASCADE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+        CREATE UNIQUE INDEX IF NOT EXISTS bookmarks_user_lecture_uq ON bookmarks (user_id, lecture_id);
     `);
 
     await pool.query(`
@@ -233,14 +237,84 @@ app.post('/api/auth/register', registerLimiter, wrap(async (req, res) => {
     const pwErr = validatePassword(password); if (pwErr) return res.status(400).json({ error: pwErr });
     const isTeacher = role === 'teacher'; const hash = await bcrypt.hash(password, 10);
     
+    // Kiểm tra Số điện thoại trùng
+    const cleanPhoneStr = cleanStr(phone);
+    if (isTeacher && cleanPhoneStr) {
+        const phoneCheck = await pool.query('SELECT id FROM users WHERE phone = $1', [cleanPhoneStr]);
+        if (phoneCheck.rows.length > 0) return res.status(409).json({ error: 'Số điện thoại này đã được sử dụng.' });
+    }
+
     try {
         await pool.query(
             'INSERT INTO users (full_name, email, password_hash, role, status, dob, phone, workplace, position, can_manage_docs) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)',
-            [fullName, email, hash, isTeacher ? 'teacher' : 'student', isTeacher ? 'pending' : 'approved', isTeacher ? cleanStr(dob) : null, isTeacher ? cleanStr(phone) : null, isTeacher ? cleanStr(workplace) : null, isTeacher ? cleanStr(position) : null]
+            [fullName, email, hash, isTeacher ? 'teacher' : 'student', isTeacher ? 'pending' : 'approved', isTeacher ? cleanStr(dob) : null, isTeacher ? cleanPhoneStr : null, isTeacher ? cleanStr(workplace) : null, isTeacher ? cleanStr(position) : null]
         );
     } catch (err) { if (err.code === '23505') return res.status(409).json({ error: 'Email này đã được đăng ký.' }); throw err; }
     res.json({ message: isTeacher ? 'Đăng ký thành công! Hồ sơ đang chờ Ban giám hiệu duyệt.' : 'Đăng ký thành công! Bạn có thể đăng nhập ngay.' });
 }));
+
+
+/* ================= API MỚI: HỒ SƠ & THÔNG BÁO & BOOKMARK ================= */
+app.put('/api/me', verifyToken, wrap(async (req, res) => {
+    const { full_name, dob, phone, workplace, position, password } = req.body;
+    const fullName = cleanStr(full_name);
+    if (fullName.length < 2) return res.status(400).json({ error: 'Họ tên quá ngắn.' });
+
+    const cleanPhone = cleanStr(phone);
+    if (cleanPhone) {
+        const phoneCheck = await pool.query('SELECT id FROM users WHERE phone = $1 AND id != $2', [cleanPhone, req.user.id]);
+        if (phoneCheck.rows.length > 0) return res.status(409).json({ error: 'Số điện thoại này đã được tài khoản khác sử dụng.' });
+    }
+
+    let pwQuery = '', vals = [fullName, cleanStr(dob), cleanPhone, cleanStr(workplace), cleanStr(position), req.user.id];
+    if (password) {
+        const pwErr = validatePassword(password);
+        if (pwErr) return res.status(400).json({ error: pwErr });
+        pwQuery = ', password_hash = $7';
+        vals.push(await bcrypt.hash(password, 10));
+    }
+
+    await pool.query(`UPDATE users SET full_name = $1, dob = $2, phone = $3, workplace = $4, position = $5 ${pwQuery} WHERE id = $6`, vals);
+    res.json({ message: 'Cập nhật hồ sơ thành công!' });
+}));
+
+app.get('/api/notifications', verifyToken, wrap(async (req, res) => {
+    const { rows } = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 30', [req.user.id]);
+    const unread = await pool.query('SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND is_read = FALSE', [req.user.id]);
+    res.json({ items: rows, unread: Number(unread.rows[0].count) });
+}));
+
+app.post('/api/notifications/read', verifyToken, wrap(async (req, res) => {
+    await pool.query('UPDATE notifications SET is_read = TRUE WHERE user_id = $1', [req.user.id]);
+    res.json({ message: 'Đã đánh dấu đọc.' });
+}));
+
+app.post('/api/lectures/:id/bookmark', verifyToken, wrap(async (req, res) => {
+    const id = toInt(req.params.id);
+    const { rows } = await pool.query('SELECT id FROM bookmarks WHERE user_id = $1 AND lecture_id = $2', [req.user.id, id]);
+    if (rows.length > 0) {
+        await pool.query('DELETE FROM bookmarks WHERE user_id = $1 AND lecture_id = $2', [req.user.id, id]);
+        res.json({ is_bookmarked: false });
+    } else {
+        await pool.query('INSERT INTO bookmarks (user_id, lecture_id) VALUES ($1, $2)', [req.user.id, id]);
+        res.json({ is_bookmarked: true });
+    }
+}));
+
+app.post('/api/lectures/:id/report', verifyToken, wrap(async (req, res) => {
+    const id = toInt(req.params.id);
+    const lec = await pool.query('SELECT title, author_id FROM lectures WHERE id = $1', [id]);
+    if (!lec.rows[0]) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+
+    const msg = `Tài liệu "${lec.rows[0].title}" vừa bị báo cáo lỗi truy cập bởi ${req.user.name}.`;
+    const targetUrl = `/view.html?id=${id}`;
+    
+    if (lec.rows[0].author_id) await pool.query('INSERT INTO notifications (user_id, type, content, target_url) VALUES ($1, $2, $3, $4)', [lec.rows[0].author_id, 'report', msg, targetUrl]);
+    await pool.query(`INSERT INTO notifications (user_id, type, content, target_url) SELECT id, 'report', $1, $2 FROM users WHERE role = 'master_admin'`, [msg, targetUrl]);
+
+    res.json({ message: 'Đã gửi báo cáo lỗi thành công! Cảm ơn bạn.' });
+}));
+/* ======================================================================== */
 
 app.get('/api/settings', wrap(async (req, res) => {
     const { rows } = await pool.query("SELECT * FROM settings WHERE portal = 'tieu_hoc'");
@@ -292,6 +366,11 @@ app.post('/api/admin/teachers/:id/permission', verifyToken, requireAdmin, wrap(a
     const id = toInt(req.params.id), canManage = Boolean(req.body.can_manage_docs);
     const result = await pool.query("UPDATE users SET can_manage_docs = $1 WHERE id = $2 AND role = 'teacher'", [canManage, id]);
     if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy giáo viên.' });
+
+    // Gửi thông báo thay đổi quyền
+    const msg = canManage ? 'Quản trị viên vừa cấp cho bạn quyền Sửa/Xóa tài liệu.' : 'Quyền Sửa/Xóa tài liệu của bạn đã bị thu hồi.';
+    await pool.query('INSERT INTO notifications (user_id, type, content) VALUES ($1, $2, $3)', [id, 'permission', msg]);
+
     res.json({ message: canManage ? 'Đã cấp quyền sửa/xóa cho giáo viên!' : 'Đã tước quyền sửa/xóa.' });
 }));
 
@@ -424,11 +503,15 @@ app.get('/api/lectures', verifyToken, wrap(async (req, res) => {
         where[where.length - 1] = `COALESCE(week_start, week_end) <= $${vals.length - 1} AND COALESCE(week_end, week_start) >= $${vals.length}`;
     }
 
+    if (req.query.bookmarked === '1') {
+        add('EXISTS (SELECT 1 FROM bookmarks b WHERE b.lecture_id = lectures.id AND b.user_id = ?)', req.user.id);
+    }
+
     where.push('deleted_at IS NULL');
     const limit = Math.min(toInt(req.query.limit) || 12, 50), page = toInt(req.query.page) || 1; const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
     const total = Number((await pool.query(`SELECT COUNT(*) FROM lectures ${whereSql}`, vals)).rows[0].count);
     
-    const { rows } = await pool.query(`SELECT id, title, description, grade, subject, category_type, file_type, file_url, author_name, author_id, views_count, avg_rating, created_at, week_start, week_end FROM lectures ${whereSql} ORDER BY created_at DESC, id DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}`, vals);
+    const { rows } = await pool.query(`SELECT id, title, description, grade, subject, category_type, file_type, file_url, author_name, author_id, views_count, avg_rating, created_at, week_start, week_end, EXISTS(SELECT 1 FROM bookmarks b2 WHERE b2.lecture_id = lectures.id AND b2.user_id = $${vals.length + 1}) AS is_bookmarked FROM lectures ${whereSql} ORDER BY created_at DESC, id DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}`, [...vals, req.user.id]);
     res.json({ items: rows, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
 }));
 
@@ -445,9 +528,17 @@ app.get('/api/lectures/:id', verifyToken, wrap(async (req, res) => {
 app.post('/api/lectures/:id/reviews', verifyToken, wrap(async (req, res) => {
     const id = toInt(req.params.id), stars = Number(req.body.stars), comment = cleanStr(req.body.comment);
     if (!id) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' }); if (!Number.isInteger(stars) || stars < 1 || stars > 5) return res.status(400).json({ error: 'Số sao phải từ 1 đến 5.' }); if (!comment || comment.length > 1000) return res.status(400).json({ error: 'Nhận xét phải từ 1 đến 1000 ký tự.' });
-    const lec = await pool.query('SELECT category_type FROM lectures WHERE id = $1', [id]); if (!lec.rows[0] || !canAccessCategory(req.user, lec.rows[0].category_type)) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+    const lec = await pool.query('SELECT category_type, author_id FROM lectures WHERE id = $1', [id]); if (!lec.rows[0] || !canAccessCategory(req.user, lec.rows[0].category_type)) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
     try { await pool.query('INSERT INTO reviews (lecture_id, user_id, author_name, stars, comment) VALUES ($1, $2, $3, $4, $5)', [id, req.user.id, req.user.name, stars, comment]); } catch (err) { if (err.code === '23505') return res.status(409).json({ error: 'Bạn đã đánh giá tài liệu này rồi.' }); throw err; }
-    await pool.query('UPDATE lectures SET avg_rating = (SELECT ROUND(AVG(stars)::numeric, 1) FROM reviews WHERE lecture_id = $1) WHERE id = $1', [id]); res.json({ message: 'Đã gửi đánh giá!' });
+    await pool.query('UPDATE lectures SET avg_rating = (SELECT ROUND(AVG(stars)::numeric, 1) FROM reviews WHERE lecture_id = $1) WHERE id = $1', [id]); 
+
+    // Gửi thông báo cho tác giả
+    if (lec.rows[0].author_id && lec.rows[0].author_id !== req.user.id) {
+        const revMsg = `${req.user.name} vừa để lại đánh giá ${stars} sao cho tài liệu của bạn.`;
+        await pool.query('INSERT INTO notifications (user_id, type, content, target_url) VALUES ($1, $2, $3, $4)', [lec.rows[0].author_id, 'review', revMsg, `/view.html?id=${id}`]);
+    }
+
+    res.json({ message: 'Đã gửi đánh giá!' });
 }));
 
 app.put('/api/lectures/:id', verifyToken, requireStaff, wrap(async (req, res) => {

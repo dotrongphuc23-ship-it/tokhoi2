@@ -29,9 +29,15 @@
                     <span class="badge bg-secondary mb-2" id="categoryBadge">...</span>
                     <h1 class="h2 fw-bold text-dark" id="docTitle">Đang tải tên tài liệu...</h1>
                 </div>
-                <div class="text-end flex-shrink-0">
-                    <span class="text-warning fs-5 fw-bold" id="avgRatingDisplay"></span>
-                    <div class="small text-muted" id="viewsDisplay"></div>
+                <div class="text-end flex-shrink-0 d-flex flex-column align-items-end gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" id="btnReport"><i class="fa fa-flag me-1"></i> Báo lỗi</button>
+                        <button class="btn btn-light border btn-sm rounded-circle shadow-sm text-danger d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" id="btnBookmarkView" title="Lưu tài liệu này"><i class="fa fa-heart fa-regular" id="bookmarkIconView"></i></button>
+                    </div>
+                    <div>
+                        <span class="text-warning fs-5 fw-bold" id="avgRatingDisplay"></span>
+                        <div class="small text-muted" id="viewsDisplay"></div>
+                    </div>
                 </div>
             </div>
             <div class="row text-secondary small mb-4 border-top border-bottom py-2 gy-1">
@@ -195,6 +201,10 @@
                 document.getElementById('avgRatingDisplay').textContent = hasRatings ? `⭐ ${Number(item.avg_rating).toFixed(1)}` : 'Chưa có đánh giá';
                 document.getElementById('descDisplay').textContent = item.description || 'Không có mô tả chi tiết.';
 
+                // Cập nhật trạng thái nút Bookmark
+                const icon = document.getElementById('bookmarkIconView');
+                icon.className = item.is_bookmarked ? 'fa fa-heart fa-solid text-danger' : 'fa fa-heart fa-regular text-secondary';
+
                 if (countView) renderFilePreview(item);
                 renderReviews(item.ratings);
                 document.getElementById('reviewForm').classList.toggle('d-none', item.already_reviewed);
@@ -222,6 +232,28 @@
                 notify(err.message);
             }
             setBusy(btn, false);
+        });
+
+        // Báo lỗi tài liệu
+        document.getElementById('btnReport').addEventListener('click', () => {
+            showConfirm('Báo cáo tài liệu lỗi', 'Nếu tài liệu này bị hỏng link, không xem được nội dung hoặc có nội dung không phù hợp, hãy gửi báo cáo để Ban quản trị xử lý nhé.', async () => {
+                try {
+                    await api(`/api/lectures/${encodeURIComponent(lectureId)}/report`, { method: 'POST' });
+                    notify('Đã gửi báo cáo lỗi thành công! Cảm ơn bạn.', 'success', 5000);
+                } catch(e) { notify(e.message); }
+            }, 'Gửi báo cáo', 'warning');
+        });
+
+        // Nút Bookmark ở trang chi tiết
+        document.getElementById('btnBookmarkView').addEventListener('click', async () => {
+            const icon = document.getElementById('bookmarkIconView'); 
+            icon.className = 'fa fa-spinner fa-spin text-secondary';
+            try {
+                const res = await api(`/api/lectures/${encodeURIComponent(lectureId)}/bookmark`, { method: 'POST' });
+                icon.className = res.is_bookmarked ? 'fa fa-heart fa-solid text-danger' : 'fa fa-heart fa-regular text-secondary';
+                if(res.is_bookmarked) notify('Đã thêm vào mục Tài liệu đã lưu!', 'success', 2000);
+                else notify('Đã xóa khỏi mục Tài liệu đã lưu!', 'info', 2000);
+            } catch(err) { notify(err.message); icon.className = 'fa fa-heart fa-regular text-secondary'; }
         });
 
         (async function init() {
