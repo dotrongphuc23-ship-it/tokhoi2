@@ -36,19 +36,30 @@
                 
                 <div class="row mb-3" id="gradeSubjectRow">
                     <div class="col-6">
-                        <label for="grade" class="form-label fw-bold">Khối lớp <span class="text-danger">*</span></label>
+                        <label for="grade" class="form-label fw-bold">Khối lớp</label>
                         <select name="grade" id="grade" class="form-select">
+                            <option value="">Dùng chung (Không chọn)</option>
                             <option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option>
                             <option value="4">Khối 4</option><option value="5">Khối 5</option>
                         </select>
                     </div>
                     <div class="col-6">
-                        <label for="subject" class="form-label fw-bold">Môn học <span class="text-danger">*</span></label>
+                        <label for="subject" class="form-label fw-bold">Môn học</label>
                         <select name="subject" id="subject" class="form-select"></select>
                     </div>
                 </div>
 
-                <!-- BOX NHẬP ALBUM -->
+                <div class="row mb-3" id="weekRow">
+                    <div class="col-6">
+                        <label for="week_start" class="form-label fw-bold">Từ tuần (Tùy chọn)</label>
+                        <select name="week_start" id="week_start" class="form-select"></select>
+                    </div>
+                    <div class="col-6">
+                        <label for="week_end" class="form-label fw-bold">Đến tuần (Tùy chọn)</label>
+                        <select name="week_end" id="week_end" class="form-select"></select>
+                    </div>
+                </div>
+
                 <div class="mb-3 d-none" id="albumRow">
                     <label for="albumInput" class="form-label fw-bold text-primary">Chọn hoặc tạo Album mới <span class="text-danger">*</span></label>
                     <input type="text" id="albumInput" class="form-control" list="albumList" placeholder="Gõ tên album mới hoặc chọn mục có sẵn...">
@@ -87,7 +98,6 @@
                     <small class="text-muted d-block mt-1">Sử dụng cho trang tính Google Sheets, Google Docs, YouTube, hoặc link tài liệu ngoài.</small>
                 </div>
 
-                <!-- THANH TIẾN TRÌNH TẢI LÊN -->
                 <div id="uploadProgressContainer" class="mb-3 d-none">
                     <div class="d-flex justify-content-between mb-1 small">
                         <span class="fw-bold text-primary">Đang tải tệp lên đám mây... Vui lòng không đóng trang!</span>
@@ -105,11 +115,14 @@
     </main>
     <script src="common.js"></script>
     <script>
-        const MAX_FILE = 50 * 1024 * 1024; // 50MB
-        document.getElementById('subject').innerHTML = optionsHtml(SUBJECTS);
+        const MAX_FILE = 50 * 1024 * 1024;
+        document.getElementById('subject').innerHTML = '<option value="">Dùng chung (Không chọn)</option>' + optionsHtml(SUBJECTS);
+        document.getElementById('week_start').innerHTML = generateWeekOptions();
+        document.getElementById('week_end').innerHTML = generateWeekOptions();
 
         const catSelect = document.getElementById('category_type');
         const gradeSubjectRow = document.getElementById('gradeSubjectRow');
+        const weekRow = document.getElementById('weekRow');
         const albumRow = document.getElementById('albumRow');
         
         const gradeSelect = document.getElementById('grade');
@@ -152,13 +165,13 @@
             
             if (needsFields) {
                 gradeSubjectRow.classList.remove('d-none');
-                gradeSelect.setAttribute('required', 'true');
-                subjectSelect.setAttribute('required', 'true');
+                weekRow.classList.remove('d-none');
+                gradeSelect.removeAttribute('required');
+                subjectSelect.removeAttribute('required');
                 subjectSelect.name = 'subject';
             } else {
                 gradeSubjectRow.classList.add('d-none');
-                gradeSelect.removeAttribute('required');
-                subjectSelect.removeAttribute('required');
+                weekRow.classList.add('d-none');
                 subjectSelect.name = '';
             }
 
@@ -232,10 +245,8 @@
             const progressBar = document.getElementById('uploadProgressBar');
             const uploadPercent = document.getElementById('uploadPercent');
 
-            // 1. Trích xuất dữ liệu form trước khi khóa
             const formDataToSend = new FormData(e.target);
 
-            // 2. Khóa Giao Diện
             function lockUI() {
                 setBusy(btn, true, 'Đang chuẩn bị dữ liệu...');
                 formElements.forEach(el => el.disabled = true);
@@ -257,17 +268,17 @@
 
             lockUI();
 
-            // Gói payload dữ liệu text
             const payload = {
                 category_type: formDataToSend.get('category_type'),
                 title: formDataToSend.get('title'),
                 grade: formDataToSend.get('grade'),
                 subject: formDataToSend.get('subject') || formDataToSend.get('albumInput'),
+                week_start: formDataToSend.get('week_start'),
+                week_end: formDataToSend.get('week_end'),
                 description: formDataToSend.get('description'),
                 link_url: formDataToSend.get('link_url')
             };
 
-            // TRƯỜNG HỢP A: TẢI ĐƯỜNG DẪN URL
             if (!isFileMode) {
                 try {
                     await api('/api/lectures', { method: 'POST', json: payload });
@@ -278,12 +289,10 @@
                 return;
             }
 
-            // TRƯỜNG HỢP B: DIRECT UPLOAD LÊN SUPABASE
             progressContainer.classList.remove('d-none');
             btn.textContent = 'Đang khởi tạo kết nối đám mây...';
 
             try {
-                // Xin cấp Signed URL cho tất cả các files
                 const filesInfo = Array.from(files).map(f => ({ name: f.name }));
                 const { urls } = await api('/api/lectures/get-upload-url', { 
                     method: 'POST', json: { files: filesInfo } 
@@ -295,13 +304,10 @@
                 let totalLoaded = 0;
                 let loadedPerFile = Array(files.length).fill(0);
                 
-                // Mở luồng tải lên song song từng file trực tiếp vào đám mây
                 const uploadPromises = Array.from(files).map((file, i) => {
                     return new Promise((resolve, reject) => {
                         const xhr = new XMLHttpRequest();
                         xhr.open('PUT', urls[i].signedUrl, true);
-                        
-                        // Khai báo đúng định dạng để Supabase nhận diện
                         xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
 
                         xhr.upload.onprogress = (e) => {
@@ -311,7 +317,6 @@
                                 const percent = Math.round((totalLoaded / totalSize) * 100);
                                 progressBar.style.width = percent + '%';
                                 uploadPercent.textContent = percent + '%';
-                                
                                 if (percent === 100) btn.textContent = 'Đang lưu dữ liệu vào hệ thống...';
                             }
                         };
@@ -321,22 +326,16 @@
                             else reject(new Error('Đám mây từ chối file: ' + file.name));
                         };
                         xhr.onerror = () => reject(new Error('Mất kết nối mạng khi đang tải: ' + file.name));
-                        
-                        // Đẩy thẳng File Binary qua Signed URL
                         xhr.send(file);
                     });
                 });
 
-                // Đợi toàn bộ ảnh/tệp lên mây xong
                 payload.uploadedFiles = await Promise.all(uploadPromises);
-
-                // Gửi lại danh sách link về cho máy chủ lưu CSDL
                 await api('/api/lectures', { method: 'POST', json: payload });
                 
                 notify('Đăng tài liệu thành công!', 'success', 3000);
                 window.removeEventListener('beforeunload', preventClose);
                 setTimeout(() => { location.href = 'index.html'; }, 1200);
-
             } catch (err) {
                 notify(err.message);
                 unlockUI();

@@ -35,9 +35,10 @@
                 </div>
             </div>
             <div class="row text-secondary small mb-4 border-top border-bottom py-2 gy-1">
-                <div class="col-md-4"><i class="fa fa-user me-1"></i> Tác giả: <b id="authorDisplay" class="text-dark">...</b></div>
-                <div class="col-md-4" id="subjectCol"><i class="fa fa-book me-1"></i> Môn học: <b id="subjectDisplay" class="text-dark">...</b></div>
-                <div class="col-md-4"><i class="fa fa-calendar me-1"></i> Ngày đăng: <b id="dateDisplay" class="text-dark">...</b></div>
+                <div class="col-md-3"><i class="fa fa-user me-1"></i> Tác giả: <b id="authorDisplay" class="text-dark">...</b></div>
+                <div class="col-md-3" id="subjectCol"><i class="fa fa-book me-1"></i> Môn học: <b id="subjectDisplay" class="text-dark">...</b></div>
+                <div class="col-md-3" id="weekCol"><i class="fa fa-calendar-week me-1"></i> Tuần học: <b id="weekDisplay" class="text-dark">...</b></div>
+                <div class="col-md-3"><i class="fa fa-calendar me-1"></i> Ngày đăng: <b id="dateDisplay" class="text-dark">...</b></div>
             </div>
             <p class="text-muted mb-0" id="descDisplay"></p>
         </div>
@@ -75,8 +76,6 @@
     <script>
         const lectureId = new URLSearchParams(location.search).get('id');
         let currentStars = 5;
-
-        // THÊM MỚI: Quản lý user hiện tại và kiểm tra Admin
         let currentUser = null;
         const isAdmin = () => currentUser && ['master_admin', 'admin'].includes(currentUser.role);
 
@@ -104,7 +103,7 @@
                     <div class="p-5 bg-light border rounded text-center shadow-sm">
                         <i class="fa fa-link text-info fa-4x mb-3"></i>
                         <h3 class="h5 fw-bold mb-3">Liên kết tài liệu ngoài</h3>
-                        <p class="text-muted mb-4">Tài liệu này được liên kết từ một nguồn bên ngoài (ví dụ: Google Sheets, YouTube, Google Docs...).</p>
+                        <p class="text-muted mb-4">Tài liệu này được liên kết từ một nguồn bên ngoài.</p>
                         <a href="${u}" target="_blank" rel="noopener" class="btn btn-info px-4 rounded-pill shadow-sm text-white">
                             <i class="fa fa-external-link-alt me-2"></i> Mở liên kết tài liệu
                         </a>
@@ -117,7 +116,6 @@
                 area.innerHTML = `<iframe src="${u}" class="preview-frame border rounded shadow-sm" title="Xem PDF"></iframe><div class="mt-3">${download}</div>`;
             } else if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(type)) {
                 const viewer = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(fileUrl);
-                
                 let icon = 'fa-file-word text-primary';
                 if (type.startsWith('ppt')) icon = 'fa-file-powerpoint text-danger';
                 else if (type.startsWith('xls') || type === 'csv') icon = 'fa-file-excel text-success';
@@ -132,7 +130,6 @@
             }
         }
 
-        // ĐÃ SỬA: Hiển thị thêm nút xóa nếu là Admin
         function renderReviews(ratings) {
             const list = document.getElementById('reviewsList');
             if (!ratings || !ratings.length) { list.innerHTML = '<p class="text-muted small mb-0">Chưa có đánh giá nào.</p>'; return; }
@@ -150,7 +147,6 @@
                 </div>`).join('');
         }
 
-        // THÊM MỚI: Hàm gọi API xóa đánh giá
         function deleteReview(reviewId) {
             showConfirm('Xóa đánh giá', 'Bạn có chắc chắn muốn xóa đánh giá này?', async () => {
                 try {
@@ -169,10 +165,25 @@
                 if (item.grade) {
                     document.getElementById('gradeBadge').textContent = `Khối ${item.grade}`;
                     document.getElementById('gradeBadge').classList.remove('d-none');
+                } else {
+                    document.getElementById('gradeBadge').textContent = `Dùng chung toàn khối`;
+                    document.getElementById('gradeBadge').classList.remove('d-none');
+                    document.getElementById('gradeBadge').classList.replace('bg-primary', 'bg-secondary');
                 }
                 
-                if (!item.subject) document.getElementById('subjectCol').style.display = 'none';
+                if (!item.subject) document.getElementById('subjectDisplay').textContent = 'Chung (Không chỉ định)';
                 else document.getElementById('subjectDisplay').textContent = item.subject;
+
+                const weekCol = document.getElementById('weekCol');
+                if (item.week_start || item.week_end) {
+                    weekCol.style.display = 'block';
+                    if (item.week_start && item.week_end && item.week_start !== item.week_end) 
+                        document.getElementById('weekDisplay').textContent = `Tuần ${item.week_start} - ${item.week_end}`;
+                    else 
+                        document.getElementById('weekDisplay').textContent = `Tuần ${item.week_start || item.week_end}`;
+                } else {
+                    weekCol.style.display = 'none';
+                }
 
                 document.getElementById('categoryBadge').textContent = CATEGORY_LABELS[item.category_type] || 'Tài liệu';
                 document.getElementById('docTitle').textContent = item.title;
@@ -215,8 +226,6 @@
 
         (async function init() {
             if (!lectureId) { location.replace('index.html'); return; }
-            
-            // ĐÃ SỬA: Lấy thông tin User để gán vào biến currentUser đã khai báo ở trên
             currentUser = await requireUser();
             if (!currentUser) return;
             

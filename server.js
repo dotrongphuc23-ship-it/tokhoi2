@@ -89,6 +89,8 @@ const initDB = async () => {
         ALTER TABLE users DROP COLUMN IF EXISTS reset_token_expires;
         ALTER TABLE lectures ADD COLUMN IF NOT EXISTS author_id INT REFERENCES users(id) ON DELETE SET NULL;
         ALTER TABLE lectures ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
+        ALTER TABLE lectures ADD COLUMN IF NOT EXISTS week_start INT DEFAULT NULL;
+        ALTER TABLE lectures ADD COLUMN IF NOT EXISTS week_end INT DEFAULT NULL;
         ALTER TABLE reviews ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id) ON DELETE SET NULL;
         CREATE UNIQUE INDEX IF NOT EXISTS reviews_lecture_user_uq ON reviews (lecture_id, user_id);
         ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen BIGINT;
@@ -223,8 +225,6 @@ app.post('/api/auth/logout', wrap(async (req, res) => {
 
 app.get('/api/me', verifyToken, (req, res) => res.json({ user: req.user }));
 
-// Đăng ký không còn xác minh OTP qua email.
-
 app.post('/api/auth/register', registerLimiter, wrap(async (req, res) => {
     const { full_name, email: rawEmail, password, role, dob, phone, workplace, position } = req.body;
     const email = normEmail(rawEmail); if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email không hợp lệ.' });
@@ -242,9 +242,6 @@ app.post('/api/auth/register', registerLimiter, wrap(async (req, res) => {
     res.json({ message: isTeacher ? 'Đăng ký thành công! Hồ sơ đang chờ Ban giám hiệu duyệt.' : 'Đăng ký thành công! Bạn có thể đăng nhập ngay.' });
 }));
 
-// Chức năng quên mật khẩu bằng OTP đã được gỡ bỏ.
-
-// ================= 6. CÀI ĐẶT TRƯỜNG & QUẢN LÝ GIÁO VIÊN =================
 app.get('/api/settings', wrap(async (req, res) => {
     const { rows } = await pool.query("SELECT * FROM settings WHERE portal = 'tieu_hoc'");
     const r = rows[0];
@@ -304,14 +301,18 @@ app.post('/api/admin/delete-teacher', verifyToken, requireAdmin, wrap(async (req
     if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy giáo viên.' }); res.json({ message: 'Đã xóa giáo viên!' });
 }));
 
-// Admin đặt lại mật khẩu cho giáo viên / học sinh (thay cho chức năng quên mật khẩu qua OTP)
 app.post('/api/admin/users/:id/reset-password', verifyToken, requireAdmin, wrap(async (req, res) => {
     const id = toInt(req.params.id); if (!id) return res.status(400).json({ error: 'Yêu cầu không hợp lệ.' });
     const pwErr = validatePassword(req.body.new_password); if (pwErr) return res.status(400).json({ error: pwErr });
-    const hash = await bcrypt.hash(req.body.new_password, 10);
-    const result = await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2 AND role IN ('teacher', 'student')", [hash, id]);
-    if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy tài khoản giáo viên/học sinh.' });
-    res.json({ message: 'Đã đặt lại mật khẩu. Hãy báo mật khẩu mới cho người dùng.' });
+    try {
+        const hash = await bcrypt.hash(req.body.new_password, 10);
+        const result = await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2 AND role IN ('teacher', 'student')", [hash, id]);
+        if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy tài khoản giáo viên/học sinh hợp lệ (Không được đổi MK của Admin khác).' });
+        res.json({ message: 'Đã đặt lại mật khẩu. Hãy báo mật khẩu mới cho người dùng.' });
+    } catch(err) {
+        console.error("Lỗi đặt lại mật khẩu:", err);
+        return res.status(500).json({ error: 'Đã xảy ra sự cố phía máy chủ khi đặt lại mật khẩu.' });
+    }
 }));
 
 app.get('/api/admin/students', verifyToken, requireAdmin, wrap(async (req, res) => {
@@ -344,13 +345,28 @@ app.get('/api/albums', verifyToken, wrap(async (req, res) => {
 }));
 
 function parseLectureFields(b) {
-    const title = cleanStr(b.title), description = cleanStr(b.description), category = cleanStr(b.category_type) || 'bai_giang'; let grade = cleanStr(String(b.grade ?? '')), subject = cleanStr(b.subject);
+    const title = cleanStr(b.title), description = cleanStr(b.description), category = cleanStr(b.category_type) || 'bai_giang'; 
+    let grade = cleanStr(String(b.grade ?? '')), subject = cleanStr(b.subject ?? '');
+    let week_start = toInt(b.week_start) || null;
+    let week_end = toInt(b.week_end) || null;
+
     if (!title || title.length > 255) return { error: 'Tên tài liệu phải từ 1 đến 255 ký tự.' };
     if (description.length > 2000) return { error: 'Mô tả tối đa 2000 ký tự.' };
     if (!CATEGORIES.includes(category)) return { error: 'Loại tài liệu không hợp lệ.' };
-    if (CATEGORIES_WITH_GRADE_SUBJECT.includes(category)) { if (!GRADES.includes(grade)) return { error: 'Khối lớp không hợp lệ.' }; if (!SUBJECTS.includes(subject)) return { error: 'Môn học không hợp lệ.' }; } 
-    else if (category === 'thu_vien_hinh_anh') { grade = ''; if (!subject) return { error: 'Vui lòng điền tên Album ảnh.' }; if (subject.length > 100) return { error: 'Tên Album tối đa 100 ký tự.' }; } 
-    else { grade = ''; subject = ''; } return { value: { title, description, grade, subject, category } };
+    
+    if (week_start && week_end && week_start > week_end) return { error: 'Tuần kết thúc phải lớn hơn hoặc bằng tuần bắt đầu.' };
+
+    if (CATEGORIES_WITH_GRADE_SUBJECT.includes(category)) { 
+        if (grade && !GRADES.includes(grade)) return { error: 'Khối lớp không hợp lệ.' }; 
+        if (subject && !SUBJECTS.includes(subject)) return { error: 'Môn học không hợp lệ.' }; 
+    } else if (category === 'thu_vien_hinh_anh') { 
+        grade = ''; 
+        if (!subject) return { error: 'Vui lòng điền tên Album ảnh.' }; 
+        if (subject.length > 100) return { error: 'Tên Album tối đa 100 ký tự.' }; 
+    } else { 
+        grade = ''; subject = ''; 
+    } 
+    return { value: { title, description, grade, subject, category, week_start, week_end } };
 }
 
 const canManageLecture = (user, lecture) => isAdmin(user) || (user.role === 'teacher' && user.can_manage_docs && lecture.author_id === user.id);
@@ -371,11 +387,20 @@ app.post('/api/lectures/get-upload-url', verifyToken, requireStaff, wrap(async (
 app.post('/api/lectures', verifyToken, requireStaff, wrap(async (req, res) => {
     const { link_url, uploadedFiles } = req.body; const parsed = parseLectureFields(req.body); if (parsed.error) return res.status(400).json({ error: parsed.error }); const f = parsed.value;
     if (uploadedFiles && uploadedFiles.length > 0) {
-        const promises = uploadedFiles.map(async (file, index) => { const displayTitle = uploadedFiles.length > 1 ? `${f.title} (${index + 1})` : f.title; return pool.query('INSERT INTO lectures (title, description, grade, subject, category_type, file_name, file_url, file_type, author_name, author_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [displayTitle, f.description, f.grade, f.subject, f.category, file.originalName.slice(0, 255), file.publicUrl, file.fileType, req.user.name, req.user.id]); });
+        const promises = uploadedFiles.map(async (file, index) => { 
+            const displayTitle = uploadedFiles.length > 1 ? `${f.title} (${index + 1})` : f.title; 
+            return pool.query(
+                'INSERT INTO lectures (title, description, grade, subject, category_type, file_name, file_url, file_type, author_name, author_id, week_start, week_end) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)', 
+                [displayTitle, f.description, f.grade, f.subject, f.category, file.originalName.slice(0, 255), file.publicUrl, file.fileType, req.user.name, req.user.id, f.week_start, f.week_end]
+            ); 
+        });
         await Promise.all(promises);
     } else if (link_url) {
         if (!/^https?:\/\//i.test(link_url)) return res.status(400).json({ error: 'Đường dẫn (URL) phải bắt đầu bằng http:// hoặc https://' }); const originalName = link_url.length > 200 ? link_url.substring(0, 200) + '...' : link_url;
-        await pool.query('INSERT INTO lectures (title, description, grade, subject, category_type, file_name, file_url, file_type, author_name, author_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [f.title, f.description, f.grade, f.subject, f.category, originalName.slice(0, 255), link_url, 'url', req.user.name, req.user.id]);
+        await pool.query(
+            'INSERT INTO lectures (title, description, grade, subject, category_type, file_name, file_url, file_type, author_name, author_id, week_start, week_end) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)', 
+            [f.title, f.description, f.grade, f.subject, f.category, originalName.slice(0, 255), link_url, 'url', req.user.name, req.user.id, f.week_start, f.week_end]
+        );
     } else { return res.status(400).json({ error: 'Chưa đính kèm file hoặc URL.' }); }
     res.json({ message: 'Đăng tài liệu thành công!' });
 }));
@@ -383,15 +408,27 @@ app.post('/api/lectures', verifyToken, requireStaff, wrap(async (req, res) => {
 app.get('/api/lectures', verifyToken, wrap(async (req, res) => {
     const where = [], vals = []; const add = (sql, v) => { vals.push(v); where.push(sql.split('?').join('$' + vals.length)); };
     const category = cleanStr(req.query.category_type);
+    
     if (category && !CATEGORIES.includes(category)) return res.status(400).json({ error: 'Loại tài liệu không hợp lệ.' });
     if (!isStaff(req.user)) { if (category && !STUDENT_CATEGORIES.includes(category)) return res.status(403).json({ error: 'Bạn không có quyền xem mục này.' }); add('category_type = ANY(?)', STUDENT_CATEGORIES); }
-    if (category) add('category_type = ?', category); const grade = cleanStr(String(req.query.grade ?? '')); if (grade) add('grade = ?', grade);
+    if (category) add('category_type = ?', category); 
+    
+    const grade = cleanStr(String(req.query.grade ?? '')); if (grade) add('grade = ?', grade);
     const subject = cleanStr(req.query.subject); if (subject) add('subject = ?', subject.slice(0, 100));
     const search = cleanStr(req.query.search).slice(0, 100); if (search) add('(title ILIKE ? OR description ILIKE ?)', '%' + search.replace(/[\\%_]/g, '\\$&') + '%');
+    
+    const week = toInt(req.query.week);
+    if (week) {
+        add('COALESCE(week_start, week_end) <= ? AND COALESCE(week_end, week_start) >= ?', week); 
+        vals.push(week); 
+        where[where.length - 1] = `COALESCE(week_start, week_end) <= $${vals.length - 1} AND COALESCE(week_end, week_start) >= $${vals.length}`;
+    }
+
     where.push('deleted_at IS NULL');
     const limit = Math.min(toInt(req.query.limit) || 12, 50), page = toInt(req.query.page) || 1; const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
     const total = Number((await pool.query(`SELECT COUNT(*) FROM lectures ${whereSql}`, vals)).rows[0].count);
-    const { rows } = await pool.query(`SELECT id, title, description, grade, subject, category_type, file_type, file_url, author_name, author_id, views_count, avg_rating, created_at FROM lectures ${whereSql} ORDER BY created_at DESC, id DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}`, vals);
+    
+    const { rows } = await pool.query(`SELECT id, title, description, grade, subject, category_type, file_type, file_url, author_name, author_id, views_count, avg_rating, created_at, week_start, week_end FROM lectures ${whereSql} ORDER BY created_at DESC, id DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}`, vals);
     res.json({ items: rows, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
 }));
 
@@ -417,8 +454,13 @@ app.put('/api/lectures/:id', verifyToken, requireStaff, wrap(async (req, res) =>
     const id = toInt(req.params.id); if (!id) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
     const { rows } = await pool.query('SELECT id, author_id FROM lectures WHERE id = $1 AND deleted_at IS NULL', [id]); if (!rows[0]) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
     if (!canManageLecture(req.user, rows[0])) return res.status(403).json({ error: 'Bạn không có quyền sửa tài liệu này (Cần được cấp quyền sửa/xóa).' });
+    
     const parsed = parseLectureFields(req.body); if (parsed.error) return res.status(400).json({ error: parsed.error }); const f = parsed.value;
-    await pool.query('UPDATE lectures SET title=$1, description=$2, grade=$3, subject=$4, category_type=$5 WHERE id=$6', [f.title, f.description, f.grade, f.subject, f.category, id]); res.json({ message: 'Đã cập nhật tài liệu!' });
+    
+    await pool.query(
+        'UPDATE lectures SET title=$1, description=$2, grade=$3, subject=$4, category_type=$5, week_start=$6, week_end=$7 WHERE id=$8', 
+        [f.title, f.description, f.grade, f.subject, f.category, f.week_start, f.week_end, id]
+    ); res.json({ message: 'Đã cập nhật tài liệu!' });
 }));
 
 app.delete('/api/lectures/:id', verifyToken, requireStaff, wrap(async (req, res) => {
@@ -485,33 +527,22 @@ app.post('/api/timetable/:classId', verifyToken, requireAdmin, wrap(async (req, 
     for (const row of input) { if (!row || typeof row !== 'object') return res.status(400).json({ error: 'Dữ liệu thời khóa biểu không hợp lệ.' }); const clean = {}; for (const f of fields) { const v = cleanStr(row[f]); if (v.length > 60) return res.status(400).json({ error: 'Mỗi ô tối đa 60 ký tự.' }); clean[f] = v; } schedule.push(clean); }
     await pool.query('INSERT INTO timetable (class_id, schedule) VALUES ($1, $2) ON CONFLICT (class_id) DO UPDATE SET schedule = EXCLUDED.schedule', [classId, JSON.stringify(schedule)]); res.json({ message: 'Lưu lịch thành công!' });
 }));
-// =========================================================
-// THÊM MỚI: API Xóa đánh giá (Chỉ dành cho Admin)
-// =========================================================
+
 app.delete('/api/lectures/:id/reviews/:reviewId', verifyToken, requireAdmin, wrap(async (req, res) => {
     const lectureId = toInt(req.params.id);
     const reviewId = toInt(req.params.reviewId);
+    if (!lectureId || !reviewId) return res.status(400).json({ error: 'Đường dẫn không hợp lệ.' });
     
-    if (!lectureId || !reviewId) {
-        return res.status(400).json({ error: 'Đường dẫn không hợp lệ.' });
-    }
-    
-    // Xóa đánh giá khỏi Database
     const result = await pool.query('DELETE FROM reviews WHERE id = $1 AND lecture_id = $2', [reviewId, lectureId]);
+    if (!result.rowCount) return res.status(404).json({ error: 'Không tìm thấy đánh giá (hoặc đã bị xóa trước đó).' });
     
-    if (!result.rowCount) {
-        return res.status(404).json({ error: 'Không tìm thấy đánh giá (hoặc đã bị xóa trước đó).' });
-    }
-    
-    // Tính toán và cập nhật lại điểm đánh giá trung bình cho tài liệu
-    // Nếu bị xóa hết đánh giá (không còn sao nào), điểm sẽ tự động quay về mức mặc định là 5.0
     await pool.query(
         'UPDATE lectures SET avg_rating = COALESCE((SELECT ROUND(AVG(stars)::numeric, 1) FROM reviews WHERE lecture_id = $1), 5.0) WHERE id = $1', 
         [lectureId]
     );
-    
     res.json({ message: 'Đã xóa đánh giá thành công!' });
 }));
+
 app.use('/api', (req, res) => res.status(404).json({ error: 'Không tìm thấy đường dẫn.' }));
 app.use((err, req, res, next) => {
     if (res.headersSent) return next(err);

@@ -13,7 +13,15 @@ const CATEGORY_LABELS = {
     van_ban_chuyen_mon: 'Văn bản chuyên môn', thu_vien_hinh_anh: 'Thư viện hình ảnh', ai: 'Trí tuệ nhân tạo (AI)' 
 };
 
-// ĐẠI TU UI/UX: Hàm tạo trạng thái trống (Empty State) sinh động
+function generateWeekOptions(selectedValue = '') {
+    let html = '<option value="">Dùng chung (Không chọn)</option>';
+    for (let i = 1; i <= 35; i++) {
+        const sel = (String(selectedValue) === String(i)) ? 'selected' : '';
+        html += `<option value="${i}" ${sel}>Tuần ${i}</option>`;
+    }
+    return html;
+}
+
 function emptyStateHtml(icon, title, desc) {
     return `<div class="col-12 empty-state">
         <div class="empty-state-icon">${icon}</div>
@@ -22,7 +30,6 @@ function emptyStateHtml(icon, title, desc) {
     </div>`;
 }
 
-// ĐẠI TU UI/UX: Hàm lấy Icon tương ứng với định dạng file
 function getFileIcon(type, isUrl) {
     if (isUrl) return '<i class="fa fa-link text-secondary"></i>';
     const t = String(type).toLowerCase();
@@ -52,6 +59,7 @@ function createOverlayDiv() {
     if (existing) existing.remove();
     const overlay = document.createElement('div'); overlay.id = 'customPopupOverlay';
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+    overlay.addEventListener('focusin', (e) => e.stopPropagation());
     return overlay;
 }
 
@@ -76,11 +84,11 @@ function showConfirm(title, message, onConfirm, confirmText = 'Xác nhận', typ
     document.getElementById('btnConfirmPopup').addEventListener('click', () => { overlay.remove(); document.body.style.overflow = 'auto'; onConfirm(); });
 }
 
-function showPrompt(title, message, placeholder, onConfirm) {
+function showPrompt(title, message, placeholder, onConfirm, inputType = 'text') {
     const overlay = createOverlayDiv();
     overlay.innerHTML = `<div class="bg-body p-4 rounded-4 shadow-lg text-center mx-3 border" style="max-width: 420px; width: 100%; animation: fadeUp 0.3s ease;">
         <div class="mb-2" style="font-size: 2.5rem;">📝</div><h3 class="h5 fw-bold mb-2 text-body">${escapeHtml(title)}</h3><p class="text-secondary mb-3 small">${escapeHtml(message)}</p>
-        <input type="text" id="promptInput" class="form-control mb-4 text-center bg-body-tertiary" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
+        <input type="${inputType}" id="promptInput" class="form-control mb-4 text-center bg-body-tertiary fw-bold" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
         <div class="d-flex gap-2"><button class="btn btn-light flex-grow-1 py-2 fw-bold border" id="btnCancelPopup">Hủy</button><button class="btn btn-primary flex-grow-1 py-2 fw-bold" id="btnConfirmPopup">Xác nhận</button></div></div>`;
     document.body.appendChild(overlay); document.body.style.overflow = 'hidden';
     const input = document.getElementById('promptInput'); input.focus();

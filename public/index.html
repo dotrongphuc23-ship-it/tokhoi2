@@ -12,38 +12,26 @@
 <body>
     <div class="container-xl px-md-4 mt-4 mb-3">
         <div id="topBannerImage" class="banner-frame shadow-sm" role="img" aria-label="Ảnh bìa" style="display: none;"><img id="bannerImg" alt="" draggable="false"></div>
-        
-        <!-- ĐÃ SỬA: z-index: 1030 và padding: 15px 20px để tối ưu cho Mobile App, tránh đè Menu -->
         <header id="headerBanner" class="shadow-sm border position-relative" style="background-color: #60A5FA; padding: 15px 20px; border-bottom: 5px solid var(--accent) !important; border-radius: 20px; z-index: 1030;">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-outline-light d-lg-none rounded-circle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
-                        <i class="fa fa-bars"></i>
-                    </button>
-                    <!-- ẢNH LOGO -->
+                    <button class="btn btn-outline-light d-lg-none rounded-circle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"><i class="fa fa-bars"></i></button>
                     <img id="schoolLogo" src="" alt="Logo" class="d-none me-3 shadow-sm rounded" style="height:100px; width: auto; object-fit: contain;">
                     <span class="fs-1 me-2" id="schoolLogoText" aria-hidden="true">📚</span>
                     <div>
-                        <!-- Tên trường: Màu vàng -->
                         <h1 class="h4 fw-bold mb-0 text-uppercase" style="color: #FFEA00 !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.2);" id="schoolName">Đang tải...</h1>
-                        <!-- Slogan: Màu đỏ (kèm viền sáng nhẹ để không bị chìm trên nền xanh) -->
                         <div class="small text-danger fw-bold mt-1" id="schoolSlogan" style="text-shadow: 1px 1px 2px rgba(255,255,255,0.7);"></div>
-                        <!-- Địa chỉ: Màu trắng in đậm -->
                         <div class="text-white fw-bold mt-1" id="schoolContact" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.3);"></div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-3" id="headerActionArea">
-                    <!-- Nút Chuyển đổi tương phản -->
-                    <button class="btn btn-light rounded-circle shadow-sm border" id="btnThemeToggle" title="Chuyển đổi màu tương phản">
-                        <i class="fa fa-circle-half-stroke" id="themeIcon"></i>
-                    </button>
+                    <button class="btn btn-light rounded-circle shadow-sm border" id="btnThemeToggle" title="Chuyển đổi màu tương phản"><i class="fa fa-circle-half-stroke" id="themeIcon"></i></button>
                     <div id="userMenuArea"></div>
                 </div>
             </div>
         </header>
     </div>
 
-    <!-- BỐ CỤC CHÍNH -->
     <div class="container-xl px-md-4 pb-5">
         <div class="row mt-4">
             <div class="col-lg-3 col-xl-3 mb-4">
@@ -75,7 +63,6 @@
             
             <div class="col-lg-9 col-xl-9">
                 <div id="sec-library">
-                    <!-- THANH TÌM KIẾM & LỌC -->
                     <div class="sticky-search shadow-sm rounded-4 px-3 py-3 mb-4 d-flex flex-column flex-lg-row gap-3 align-items-center">
                         <div class="flex-grow-1 w-100">
                             <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border bg-body-tertiary">
@@ -85,12 +72,14 @@
                         </div>
                         <div style="min-width: 160px;" class="w-100 w-lg-auto" id="gradeFilterContainer">
                             <select id="gradeFilter" class="form-select form-select-lg bg-body-tertiary border shadow-sm rounded-pill">
-                                <option value="">Tất cả Khối</option>
-                                <option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option><option value="4">Khối 4</option><option value="5">Khối 5</option>
+                                <option value="">Tất cả Khối</option><option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option><option value="4">Khối 4</option><option value="5">Khối 5</option>
                             </select>
                         </div>
                         <div style="min-width: 200px;" class="w-100 w-lg-auto" id="subjectFilterContainer">
                             <select id="subjectFilter" class="form-select form-select-lg bg-body-tertiary border shadow-sm rounded-pill"></select>
+                        </div>
+                        <div style="min-width: 140px;" class="w-100 w-lg-auto d-none d-flex gap-2" id="weekFilterContainer">
+                            <select id="weekFilter" class="form-select form-select-lg bg-body-tertiary border shadow-sm rounded-pill"></select>
                         </div>
                         <div style="min-width: 220px;" class="w-100 w-lg-auto d-none d-flex gap-2" id="albumFilterContainer">
                             <select id="albumSelectFilter" class="form-select form-select-lg bg-body-tertiary border shadow-sm rounded-pill"><option value="">Tất cả Album</option></select>
@@ -123,7 +112,6 @@
         </div>
     </div>
 
-    <!-- THANH CÔNG CỤ XÓA HÀNG LOẠT -->
     <div id="bulkActionBar" class="fixed-bottom bg-dark text-white p-3 d-none shadow-lg d-flex justify-content-between align-items-center" style="z-index: 1050; border-radius: 20px 20px 0 0;">
         <div>Đã chọn <span id="bulkCount" class="fw-bold text-warning fs-5">0</span> tài liệu</div>
         <div>
@@ -132,7 +120,7 @@
         </div>
     </div>
 
-    <!-- MODAL: THÙNG RÁC -->
+    <!-- CÁC MODAL HỆ THỐNG -->
     <div class="modal fade" id="trashModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
             <div class="modal-content bg-body">
@@ -152,13 +140,11 @@
         </div>
     </div>
 
-    <!-- MODAL CÀI ĐẶT TRƯỜNG -->
     <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content bg-body">
         <div class="modal-header border-bottom"><h5 class="modal-title fw-bold"><i class="fa fa-cog text-secondary me-2"></i> Cài đặt trường</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <form id="settingsForm">
             <div class="modal-body">
                 <label class="fw-bold mb-1">URL Hình ảnh Logo (Tùy chọn)</label><input type="url" id="setLogoUrl" name="logoUrl" class="form-control bg-body-tertiary mb-3 border-0" placeholder="https://...">
-                
                 <label class="fw-bold mb-1">Tên trường</label><input type="text" id="setSchoolName" name="schoolName" class="form-control bg-body-tertiary mb-3 border-0" required maxlength="255">
                 <label class="fw-bold mb-1">Slogan</label><input type="text" id="setSlogan" name="slogan" class="form-control bg-body-tertiary mb-3 border-0" required maxlength="255">
                 <label class="fw-bold mb-1">Liên hệ</label><input type="text" id="setContact" name="contact" class="form-control bg-body-tertiary mb-3 border-0" required maxlength="255">
@@ -178,9 +164,7 @@
         </form>
     </div></div></div>
 
-    <!-- MODAL TÀI LIỆU, GIÁO VIÊN, HỌC SINH -->
-    <div class="modal fade" id="editLectureModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content bg-body"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold">Sửa thông tin tài liệu</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form id="editLectureForm"><div class="modal-body"><input type="hidden" id="editId"><label class="fw-bold mb-1">Loại tài liệu</label><select id="editCategory" class="form-select mb-3 bg-body-tertiary border-0"><option value="bai_giang">Bài giảng điện tử</option><option value="bai_tap">Bài tập</option><option value="ke_hoach_giang_day">Kế hoạch bài dạy</option><option value="de_kiem_tra">Đề kiểm tra</option><option value="tich_hop">Tích hợp môn học / HDGD</option><option value="ke_hoach_day_hoc">Kế hoạch dạy học</option><option value="ke_hoach_chuyen_mon">Kế hoạch chuyên môn</option><option value="ke_hoach_gd_khoi_2">Kế hoạch giáo dục khối 2</option><option value="van_ban_chuyen_mon">Văn bản chuyên môn</option><option value="thu_vien_hinh_anh">Thư viện hình ảnh</option><option value="ai">Trí tuệ nhân tạo (AI)</option></select><label class="fw-bold mb-1">Tên tài liệu / Tên ảnh</label><input type="text" id="editTitle" class="form-control mb-3 bg-body-tertiary border-0" required maxlength="255"><div class="row mb-3" id="editGradeSubjectRow"><div class="col-6"><label class="fw-bold mb-1">Khối lớp</label><select id="editGrade" class="form-select bg-body-tertiary border-0"><option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option><option value="4">Khối 4</option><option value="5">Khối 5</option></select></div><div class="col-6"><label class="fw-bold mb-1">Môn học</label><select id="editSubject" class="form-select bg-body-tertiary border-0"></select></div></div><div class="mb-3 d-none" id="editAlbumRow"><label class="fw-bold mb-1">Chuyển sang Album khác</label><input type="text" id="editAlbum" class="form-control bg-body-tertiary border-0" list="editAlbumList"><datalist id="editAlbumList"></datalist></div><label class="fw-bold mb-1">Mô tả</label><textarea id="editDesc" class="form-control bg-body-tertiary border-0" rows="2" maxlength="2000"></textarea></div><div class="modal-footer border-0"><button type="submit" id="btnSaveLecture" class="btn btn-brand rounded-pill px-4">Lưu thay đổi</button></div></form></div></div></div>
-    
+    <div class="modal fade" id="editLectureModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content bg-body"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold">Sửa thông tin tài liệu</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form id="editLectureForm"><div class="modal-body"><input type="hidden" id="editId"><label class="fw-bold mb-1">Loại tài liệu</label><select id="editCategory" class="form-select mb-3 bg-body-tertiary border-0"><option value="bai_giang">Bài giảng điện tử</option><option value="bai_tap">Bài tập</option><option value="ke_hoach_giang_day">Kế hoạch bài dạy</option><option value="de_kiem_tra">Đề kiểm tra</option><option value="tich_hop">Tích hợp môn học / HDGD</option><option value="ke_hoach_day_hoc">Kế hoạch dạy học</option><option value="ke_hoach_chuyen_mon">Kế hoạch chuyên môn</option><option value="ke_hoach_gd_khoi_2">Kế hoạch giáo dục khối 2</option><option value="van_ban_chuyen_mon">Văn bản chuyên môn</option><option value="thu_vien_hinh_anh">Thư viện hình ảnh</option><option value="ai">Trí tuệ nhân tạo (AI)</option></select><label class="fw-bold mb-1">Tên tài liệu / Tên ảnh</label><input type="text" id="editTitle" class="form-control mb-3 bg-body-tertiary border-0" required maxlength="255"><div class="row mb-3" id="editGradeSubjectRow"><div class="col-6"><label class="fw-bold mb-1">Khối lớp</label><select id="editGrade" class="form-select bg-body-tertiary border-0"><option value="">Dùng chung (Không chọn)</option><option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option><option value="4">Khối 4</option><option value="5">Khối 5</option></select></div><div class="col-6"><label class="fw-bold mb-1">Môn học</label><select id="editSubject" class="form-select bg-body-tertiary border-0"></select></div></div><div class="row mb-3" id="editWeekRow"><div class="col-6"><label class="fw-bold mb-1">Từ tuần (Tùy chọn)</label><select id="editWeekStart" class="form-select bg-body-tertiary border-0"></select></div><div class="col-6"><label class="fw-bold mb-1">Đến tuần (Tùy chọn)</label><select id="editWeekEnd" class="form-select bg-body-tertiary border-0"></select></div></div><div class="mb-3 d-none" id="editAlbumRow"><label class="fw-bold mb-1">Chuyển sang Album khác</label><input type="text" id="editAlbum" class="form-control bg-body-tertiary border-0" list="editAlbumList"><datalist id="editAlbumList"></datalist></div><label class="fw-bold mb-1">Mô tả</label><textarea id="editDesc" class="form-control bg-body-tertiary border-0" rows="2" maxlength="2000"></textarea></div><div class="modal-footer border-0"><button type="submit" id="btnSaveLecture" class="btn btn-brand rounded-pill px-4">Lưu thay đổi</button></div></form></div></div></div>
     <div class="modal fade" id="teachersListModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-xl modal-fullscreen-lg-down"><div class="modal-content bg-body"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold"><i class="fa fa-users text-info me-2"></i> Danh sách giáo viên <small id="teachersOnlineCount" class="ms-2 fw-normal"></small></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="d-flex justify-content-end mb-3"><button type="button" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold" id="btnExportExcel"><i class="fa fa-file-excel me-1"></i> Xuất Excel</button></div><div class="table-responsive bg-body rounded-3 shadow-sm border"><table class="table table-hover align-middle mb-0 text-nowrap"><thead class="table-light text-center"><tr><th>Họ tên</th><th>Trạng thái</th><th>Email</th><th>Ngày sinh</th><th>Số điện thoại</th><th>Đơn vị công tác</th><th>Chức vụ</th><th>Hành động</th></tr></thead><tbody id="teachersListBody"></tbody></table></div></div></div></div></div>
     <div class="modal fade" id="studentsListModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-xl modal-fullscreen-lg-down"><div class="modal-content bg-body"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold"><i class="fa fa-user-graduate text-success me-2"></i> Danh sách học sinh <small id="studentsOnlineCount" class="ms-2 fw-normal"></small></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row g-2 mb-3"><div class="col"><div class="input-group rounded-pill border overflow-hidden"><span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="fa fa-search"></i></span><input type="search" id="studentSearch" class="form-control bg-body-tertiary border-0" placeholder="Tìm theo tên hoặc email..."></div></div><div class="col-auto"><button type="button" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold" id="btnExportStudents"><i class="fa fa-file-excel me-1"></i> Xuất Excel</button></div></div><div class="table-responsive bg-body rounded-3 shadow-sm border"><table class="table table-hover align-middle text-center text-nowrap mb-0"><thead class="table-light"><tr><th>Họ tên</th><th>Email</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody id="studentsListBody"></tbody></table></div><div class="d-flex justify-content-center mt-4" id="studentsPager"></div></div></div></div></div>
     <div class="modal fade" id="pendingTeachersModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content bg-body"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold"><i class="fa fa-user-check text-warning me-2"></i> Duyệt hồ sơ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="table-responsive bg-body rounded-3 shadow-sm border"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th>Họ tên</th><th>Email</th><th class="text-end pe-3">Hành động</th></tr></thead><tbody id="pendingTeachersBody"></tbody></table></div></div></div></div></div>
@@ -192,26 +176,41 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         let currentUser = null;
-        let currentGrade = '', currentCategory = 'bai_giang', currentSubject = '', currentPage = 1;
+        let currentGrade = '', currentCategory = 'bai_giang', currentSubject = '', currentWeek = '', currentPage = 1;
         let currentSchedule = [], editorRows = [];
         let loadSeq = 0, timetableLoaded = false;
         const lectureCache = new Map();
         let currentTeachersList = [];
         let studentPage = 1, studentSeq = 0, presenceTimer = null; 
         let checkedIds = new Set();
-
         const $ = (id) => document.getElementById(id);
         const isAdmin = () => ['master_admin', 'admin'].includes(currentUser.role);
         const showModal = (id) => bootstrap.Modal.getOrCreateInstance($(id)).show();
         const hideModal = (id) => bootstrap.Modal.getOrCreateInstance($(id)).hide();
 
-      function toggleTheme() {
+        function saveState() {
+            const state = { currentCategory, currentGrade, currentSubject, currentWeek, currentPage, search: $('searchInput').value };
+            sessionStorage.setItem('portalApp_State', JSON.stringify(state));
+        }
+        function loadState() {
+            try {
+                const stateStr = sessionStorage.getItem('portalApp_State');
+                if (stateStr) {
+                    const st = JSON.parse(stateStr);
+                    currentCategory = st.currentCategory || 'bai_giang'; currentGrade = st.currentGrade || ''; currentSubject = st.currentSubject || '';
+                    currentWeek = st.currentWeek || ''; currentPage = st.currentPage || 1;
+                    if ($('searchInput')) $('searchInput').value = st.search || '';
+                    if ($('gradeFilter')) $('gradeFilter').value = currentGrade; if ($('subjectFilter')) $('subjectFilter').value = currentSubject; if ($('weekFilter')) $('weekFilter').value = currentWeek;
+                    document.querySelectorAll('#mainNav .nav-link').forEach(b => { b.classList.remove('active'); if(b.dataset.category === currentCategory) b.classList.add('active'); });
+                }
+            } catch(e) {}
+        }
+
+        function toggleTheme() {
             const current = document.documentElement.getAttribute('data-bs-theme');
             const next = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-bs-theme', next);
             localStorage.setItem('theme', next);
-            
-            // Đổi biểu tượng thành Vòng tròn tương phản (Circle Half-Stroke)
             $('themeIcon').className = next === 'dark' ? 'fa fa-circle-half-stroke text-warning' : 'fa fa-circle-half-stroke text-dark';
         }
 
@@ -271,23 +270,12 @@
                 $('schoolSlogan').textContent = data.slogan || ''; 
                 $('schoolContact').innerHTML = `<i class="fa fa-map-marker-alt"></i> ${escapeHtml(data.contact || 'Đang cập nhật...')}`;
                 document.title = (data.schoolName || 'Cổng Tiểu Học');
-
-                // Cập nhật Logo
-                if (data.logoUrl) {
-                    $('schoolLogo').src = data.logoUrl;
-                    $('schoolLogo').classList.remove('d-none');
-                    $('schoolLogoText').classList.add('d-none');
-                } else {
-                    $('schoolLogo').classList.add('d-none');
-                    $('schoolLogoText').classList.remove('d-none');
-                }
-
+                if (data.logoUrl) { $('schoolLogo').src = data.logoUrl; $('schoolLogo').classList.remove('d-none'); $('schoolLogoText').classList.add('d-none'); } else { $('schoolLogo').classList.add('d-none'); $('schoolLogoText').classList.remove('d-none'); }
                 const topBanner = $('topBannerImage'), header = $('headerBanner'); const img = $('bannerImg');
                 savedBanner = { url: data.bannerUrl || '', x: data.bannerPosX ?? 50, y: data.bannerPosY ?? 50, z: (data.bannerZoom ?? 100) / 100, fit: data.bannerFit || 'cover' };
                 if (savedBanner.url) {
                     topBanner.style.display = 'block'; if (img.getAttribute('src') !== savedBanner.url) img.src = savedBanner.url;
-                    applyBannerView(img, savedBanner.x, savedBanner.y, savedBanner.z, savedBanner.fit);
-                    header.style.borderRadius = '0 0 20px 20px'; header.style.borderTop = '0';
+                    applyBannerView(img, savedBanner.x, savedBanner.y, savedBanner.z, savedBanner.fit); header.style.borderRadius = '0 0 20px 20px'; header.style.borderTop = '0';
                 } else { topBanner.style.display = 'none'; header.style.borderRadius = '20px'; }
             } catch (e) {}
         }
@@ -295,30 +283,23 @@
         async function openSettings() {
             try {
                 const data = await api('/api/settings');
-                $('setLogoUrl').value = data.logoUrl || '';
-                $('setSchoolName').value = data.schoolName || ''; $('setSlogan').value = data.slogan || ''; $('setContact').value = data.contact || ''; $('setBanner').value = '';
+                $('setLogoUrl').value = data.logoUrl || ''; $('setSchoolName').value = data.schoolName || ''; $('setSlogan').value = data.slogan || ''; $('setContact').value = data.contact || ''; $('setBanner').value = '';
                 savedBanner = { url: data.bannerUrl || '', x: data.bannerPosX ?? 50, y: data.bannerPosY ?? 50, z: (data.bannerZoom ?? 100) / 100, fit: data.bannerFit || 'cover' };
                 $('setBannerFit').value = savedBanner.fit; showModal('settingsModal'); resetBannerEditor();
             } catch (e) { notify(e.message); }
         }
 
-        async function logout() {
-            try { await api('/api/auth/logout', { method: 'POST', redirectOn401: false }); } catch (e) { }
-            localStorage.clear(); location.replace('login.html');
-        }
+        async function logout() { try { await api('/api/auth/logout', { method: 'POST', redirectOn401: false }); } catch (e) { } localStorage.clear(); location.replace('login.html'); }
 
         function renderUser() {
             let roleText = '🎒 Phụ huynh / Học sinh', nameDisplay = currentUser.name || 'Người dùng';
             const isManager = isAdmin() || currentUser.can_manage_docs;
-            
-            if (currentUser.role === 'teacher') roleText = '👨‍‍🏫 Giáo viên';
-            if (isAdmin()) { roleText = '👑 Quản trị viên';nameDisplay = 'Đỗ Ngọc Thương'; }
+            if (currentUser.role === 'teacher') roleText = '👨‍‍🏫 Giáo viên'; if (isAdmin()) { roleText = '👑 Quản trị viên'; nameDisplay = 'Đỗ Ngọc Thương'; }
 
             $('userMenuArea').innerHTML = `
                 <div class="dropdown d-inline-block">
                     <button class="btn btn-light rounded-pill shadow-sm dropdown-toggle fw-bold d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" title="Menu Tài Khoản">
-                        <i class="fa fa-user-circle text-primary fs-5"></i> 
-                        <span class="text-truncate text-body" style="max-width: 150px;">${escapeHtml(nameDisplay)}</span>
+                        <i class="fa fa-user-circle text-primary fs-5"></i> <span class="text-truncate text-body" style="max-width: 150px;">${escapeHtml(nameDisplay)}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2">
                         <li><h6 class="dropdown-header fw-bold text-uppercase text-primary">${roleText}</h6></li>
@@ -334,26 +315,15 @@
                 </div>
             `;
             $('btnLogout').addEventListener('click', logout);
-
             if (isAdmin() || currentUser.role === 'teacher') {
                 const uploadBtn = document.createElement('a'); uploadBtn.href = 'upload.html'; uploadBtn.className = 'btn btn-danger rounded-circle shadow-sm'; uploadBtn.innerHTML = '<i class="fa fa-upload"></i>'; uploadBtn.title = 'Tải tài liệu lên';
                 $('headerActionArea').insertBefore(uploadBtn, $('headerActionArea').firstChild);
-                
                 if ($('btnCreateAlbum')) $('btnCreateAlbum').classList.remove('d-none');
-                if(isAdmin()) {
-                    $('masterAdminEditScheduleBtn').innerHTML = '<button type="button" class="btn btn-danger btn-sm ms-2 rounded-pill shadow-sm" id="btnEditSchedule"><i class="fa fa-pencil-alt"></i> Sửa lịch</button>';
-                    checkPendingCount(); setInterval(() => { if (!document.hidden) checkPendingCount(); }, 60000);
-                }
-            } else {
-                ['nav-ke-hoach-giang-day', 'nav-ke-hoach-day-hoc', 'nav-de-kiem-tra', 'nav-tich-hop', 'nav-kh-chuyen-mon', 'nav-kh-gd-khoi-2', 'nav-vb-chuyen-mon'].forEach(id => { if($(id)) $(id).classList.add('d-none'); });
-            }
+                if(isAdmin()) { $('masterAdminEditScheduleBtn').innerHTML = '<button type="button" class="btn btn-danger btn-sm ms-2 rounded-pill shadow-sm" id="btnEditSchedule"><i class="fa fa-pencil-alt"></i> Sửa lịch</button>'; checkPendingCount(); setInterval(() => { if (!document.hidden) checkPendingCount(); }, 60000); }
+            } else { ['nav-ke-hoach-giang-day', 'nav-ke-hoach-day-hoc', 'nav-de-kiem-tra', 'nav-tich-hop', 'nav-kh-chuyen-mon', 'nav-kh-gd-khoi-2', 'nav-vb-chuyen-mon'].forEach(id => { if($(id)) $(id).classList.add('d-none'); }); }
         }
 
-        function updateBulkBar() {
-            const bar = $('bulkActionBar');
-            if (checkedIds.size > 0) { bar.classList.remove('d-none'); $('bulkCount').textContent = checkedIds.size; } 
-            else { bar.classList.add('d-none'); }
-        }
+        function updateBulkBar() { const bar = $('bulkActionBar'); if (checkedIds.size > 0) { bar.classList.remove('d-none'); $('bulkCount').textContent = checkedIds.size; } else { bar.classList.add('d-none'); } }
 
         function lectureCard(item) {
             const canManage = isAdmin() || (currentUser.role === 'teacher' && currentUser.can_manage_docs && item.author_id === currentUser.id);
@@ -361,52 +331,45 @@
             const checkboxHtml = canManage ? `<div class="position-absolute" style="top: 15px; right: 15px; z-index: 10;"><input type="checkbox" class="form-check-input lecture-checkbox shadow" value="${id}" ${isChecked}></div>` : '';
 
             if (item.category_type === 'thu_vien_hinh_anh') {
-                const isImg = ['jpg','jpeg','png','webp'].includes(item.file_type);
-                const isVid = ['mp4','mov','webm'].includes(item.file_type);
+                const isImg = ['jpg','jpeg','png','webp'].includes(item.file_type); const isVid = ['mp4','mov','webm'].includes(item.file_type);
                 let thumb = 'https://placehold.co/400x250/1a535c/FFF?text=URL+Liên+kết';
                 if (isImg) thumb = item.file_url; else if (isVid) thumb = 'https://placehold.co/400x250/1a535c/FFF?text=Video+Media';
-                
-                return `<div class="col-md-6 col-lg-4 col-xl-4 mb-4 position-relative">
-                    ${checkboxHtml}
-                    <div class="card border-0 h-100 album-card bg-body">
-                        <a href="view.html?id=${id}" class="d-block album-img-wrapper" style="background-image: url('${escapeHtml(thumb)}'); border-radius: 15px 15px 0 0;"></a>
-                        <div class="p-3 d-flex flex-column h-100 rounded-bottom-4">
-                            <h3 class="h6 fw-bold text-truncate mb-1" title="${escapeHtml(item.title)}"><a href="view.html?id=${id}" class="text-decoration-none text-body">${escapeHtml(item.title)}</a></h3>
+                return `<div class="col-md-6 col-lg-4 col-xl-4 mb-4 position-relative">${checkboxHtml}
+                    <div class="card border-0 h-100 album-card bg-body"><a href="view.html?id=${id}" class="d-block album-img-wrapper" style="background-image: url('${escapeHtml(thumb)}'); border-radius: 15px 15px 0 0;"></a>
+                        <div class="p-3 d-flex flex-column h-100 rounded-bottom-4"><h3 class="h6 fw-bold text-truncate mb-1" title="${escapeHtml(item.title)}"><a href="view.html?id=${id}" class="text-decoration-none text-body">${escapeHtml(item.title)}</a></h3>
                             <small class="text-secondary mb-3"><i class="fa fa-folder-open text-warning me-1"></i> ${escapeHtml(item.subject || 'Album chung')}</small>
-                            <div class="d-flex gap-2 mt-auto">
-                                ${canManage ? `<button type="button" class="btn btn-sm btn-light flex-grow-1 border fw-bold" data-action="edit" data-id="${id}">Sửa</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger flex-grow-1 fw-bold" data-action="delete" data-id="${id}">Xóa</button>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
+                            <div class="d-flex gap-2 mt-auto">${canManage ? `<button type="button" class="btn btn-sm btn-light flex-grow-1 border fw-bold" data-action="edit" data-id="${id}">Sửa</button><button type="button" class="btn btn-sm btn-outline-danger flex-grow-1 fw-bold" data-action="delete" data-id="${id}">Xóa</button>` : ''}</div>
+                        </div></div></div>`;
             }
 
-            const gradeBadge = item.grade ? `<span class="badge bg-primary text-white border border-primary">Khối ${escapeHtml(item.grade)}</span>` : '';
-            return `<div class="col-md-6 col-lg-4 col-xl-4 mb-4 position-relative">
-                ${checkboxHtml}
+            const gradeBadge = item.grade ? `<span class="badge bg-primary text-white border border-primary">Khối ${escapeHtml(item.grade)}</span>` : '<span class="badge bg-secondary text-white border">Chung</span>';
+            const subjBadge = item.subject ? `<small class="text-secondary d-block mb-1"><i class="fa fa-book me-1"></i> Môn: ${escapeHtml(item.subject)}</small>` : '';
+            
+            let weekBadge = '';
+            if(item.week_start || item.week_end) {
+                if(item.week_start && item.week_end && item.week_start !== item.week_end) weekBadge = `Tuần ${item.week_start} - ${item.week_end}`;
+                else weekBadge = `Tuần ${item.week_start || item.week_end}`;
+                weekBadge = `<small class="text-success d-block fw-bold mb-2"><i class="fa fa-calendar-week me-1"></i> ${weekBadge}</small>`;
+            } else { weekBadge = `<div class="mb-2"></div>`; }
+
+            return `<div class="col-md-6 col-lg-4 col-xl-4 mb-4 position-relative">${checkboxHtml}
                 <div class="card p-3 border h-100 bg-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex gap-2 align-items-center"><span class="fs-3 lh-1">${getFileIcon(item.file_type, item.file_type==='url')}</span>${gradeBadge}</div>
-                    <span class="badge bg-body-tertiary text-body border">${escapeHtml(CATEGORY_LABELS[item.category_type] || item.category_type)}</span>
-                </div>
+                <div class="d-flex justify-content-between align-items-start mb-3"><div class="d-flex gap-2 align-items-center"><span class="fs-3 lh-1">${getFileIcon(item.file_type, item.file_type==='url')}</span>${gradeBadge}</div><span class="badge bg-body-tertiary text-body border">${escapeHtml(CATEGORY_LABELS[item.category_type] || item.category_type)}</span></div>
                 <h3 class="h6 fw-bold text-truncate text-body mb-2" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h3>
                 <small class="text-secondary d-block mb-1"><i class="fa fa-user-circle me-1"></i> ${escapeHtml(item.author_name)}</small>
-                ${item.subject ? `<small class="text-secondary d-block mb-3"><i class="fa fa-book me-1"></i> ${escapeHtml(item.subject)}</small>` : '<div class="mb-3"></div>'}
+                ${subjBadge}${weekBadge}
                 <div class="d-flex gap-2 mt-auto">
                     <a href="view.html?id=${id}" class="btn btn-sm btn-primary flex-grow-1 fw-bold rounded-pill">Vào xem</a>
-                    ${canManage ? `<button type="button" class="btn btn-sm btn-light border fw-bold rounded-pill" data-action="edit" data-id="${id}"><i class="fa fa-pencil-alt"></i></button>
-                    <button type="button" class="btn btn-sm btn-outline-danger fw-bold rounded-pill" data-action="delete" data-id="${id}"><i class="fa fa-trash"></i></button>` : ''}
-                </div>
-            </div></div>`;
+                    ${canManage ? `<button type="button" class="btn btn-sm btn-light border fw-bold rounded-pill" data-action="edit" data-id="${id}"><i class="fa fa-pencil-alt"></i></button><button type="button" class="btn btn-sm btn-outline-danger fw-bold rounded-pill" data-action="delete" data-id="${id}"><i class="fa fa-trash"></i></button>` : ''}
+                </div></div></div>`;
         }
 
         async function loadLectures() {
-            checkedIds.clear(); updateBulkBar(); 
-            const seq = ++loadSeq;
+            saveState(); checkedIds.clear(); updateBulkBar(); const seq = ++loadSeq;
             const params = new URLSearchParams({ page: currentPage, limit: 12, category_type: currentCategory });
             if (currentGrade) params.set('grade', currentGrade);
             if (currentSubject) params.set('subject', currentSubject);
+            if (currentWeek) params.set('week', currentWeek);
             const q = $('searchInput').value.trim(); if (q) params.set('search', q);
             
             const grid = $('lectureGrid');
@@ -415,27 +378,13 @@
             
             try {
                 const data = await api('/api/lectures?' + params.toString());
-                if (seq !== loadSeq) return;
-                grid.classList.remove('is-loading');
-                
+                if (seq !== loadSeq) return; grid.classList.remove('is-loading');
                 if (data.items.length === 0 && currentPage > 1) { currentPage = data.pages; return loadLectures(); }
                 lectureCache.clear(); data.items.forEach((it) => lectureCache.set(Number(it.id), it));
-                
-                if(data.items.length === 0) {
-                    grid.innerHTML = emptyStateHtml('📭', 'Chưa có tài liệu', 'Hiện chưa có tài liệu nào phù hợp với bộ lọc tìm kiếm của bạn.');
-                } else {
-                    grid.innerHTML = data.items.map(lectureCard).join('');
-                }
-                
-                $('pager').innerHTML = data.total ? `<div class="d-flex align-items-center gap-3"><small class="text-muted fw-bold">${data.total} tài liệu (Trang ${data.page}/${data.pages})</small>
-                    <div class="btn-group shadow-sm"><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page - 1}" ${data.page <= 1 ? 'disabled' : ''}>&laquo; Trước</button>
-                    <button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page + 1}" ${data.page >= data.pages ? 'disabled' : ''}>Sau &raquo;</button></div></div>` : '';
-            } catch (e) {
-                if (seq !== loadSeq || e.status === 401) return;
-                grid.classList.remove('is-loading');
-                grid.innerHTML = emptyStateHtml('⚠', 'Lỗi tải dữ liệu', escapeHtml(e.message));
-                $('pager').innerHTML = '';
-            }
+                if(data.items.length === 0) { grid.innerHTML = emptyStateHtml('📭', 'Chưa có tài liệu', 'Hiện chưa có tài liệu nào phù hợp với bộ lọc tìm kiếm của bạn.'); } 
+                else { grid.innerHTML = data.items.map(lectureCard).join(''); }
+                $('pager').innerHTML = data.total ? `<div class="d-flex align-items-center gap-3"><small class="text-muted fw-bold">${data.total} tài liệu (Trang ${data.page}/${data.pages})</small><div class="btn-group shadow-sm"><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page - 1}" ${data.page <= 1 ? 'disabled' : ''}>&laquo; Trước</button><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page + 1}" ${data.page >= data.pages ? 'disabled' : ''}>Sau &raquo;</button></div></div>` : '';
+            } catch (e) { if (seq !== loadSeq || e.status === 401) return; grid.classList.remove('is-loading'); grid.innerHTML = emptyStateHtml('⚠', 'Lỗi tải dữ liệu', escapeHtml(e.message)); $('pager').innerHTML = ''; }
         }
 
         function deleteLecture(id) {
@@ -453,294 +402,106 @@
             const it = lectureCache.get(id); if (!it) return;
             $('editId').value = id; $('editCategory').value = it.category_type; $('editTitle').value = it.title;
             $('editGrade').value = it.grade || ''; $('editSubject').value = it.subject || ''; $('editAlbum').value = it.subject || ''; $('editDesc').value = it.description || '';
+            $('editWeekStart').innerHTML = generateWeekOptions(it.week_start || ''); $('editWeekEnd').innerHTML = generateWeekOptions(it.week_end || '');
             $('editCategory').dispatchEvent(new Event('change')); showModal('editLectureModal');
         }
 
         $('editCategory').addEventListener('change', (e) => {
             const val = e.target.value; const needsFilter = ['bai_giang', 'bai_tap', 'ke_hoach_giang_day', 'de_kiem_tra', 'tich_hop'].includes(val);
-            $('editGradeSubjectRow').style.display = needsFilter ? 'flex' : 'none'; $('editAlbumRow').style.display = (val === 'thu_vien_hinh_anh') ? 'block' : 'none';
+            $('editGradeSubjectRow').style.display = needsFilter ? 'flex' : 'none'; $('editWeekRow').style.display = needsFilter ? 'flex' : 'none'; $('editAlbumRow').style.display = (val === 'thu_vien_hinh_anh') ? 'block' : 'none';
         });
 
         $('editLectureForm').addEventListener('submit', async (e) => {
             e.preventDefault(); const cat = $('editCategory').value;
             const payload = { title: $('editTitle').value, description: $('editDesc').value, category_type: cat };
             if (cat === 'thu_vien_hinh_anh') { payload.grade = ''; payload.subject = $('editAlbum').value; }
-            else if (['bai_giang', 'bai_tap', 'ke_hoach_giang_day', 'de_kiem_tra', 'tich_hop'].includes(cat)) { payload.grade = $('editGrade').value; payload.subject = $('editSubject').value; } 
-            else { payload.grade = ''; payload.subject = ''; }
-            try {
-                await api(`/api/lectures/${$('editId').value}`, { method: 'PUT', json: payload });
-                hideModal('editLectureModal'); notify('Đã cập nhật.', 'success'); loadLectures(); loadAlbums();
-            } catch (err) {}
+            else if (['bai_giang', 'bai_tap', 'ke_hoach_giang_day', 'de_kiem_tra', 'tich_hop'].includes(cat)) { 
+                payload.grade = $('editGrade').value; payload.subject = $('editSubject').value; payload.week_start = $('editWeekStart').value; payload.week_end = $('editWeekEnd').value;
+            } else { payload.grade = ''; payload.subject = ''; }
+            try { await api(`/api/lectures/${$('editId').value}`, { method: 'PUT', json: payload }); hideModal('editLectureModal'); notify('Đã cập nhật.', 'success'); loadLectures(); loadAlbums(); } catch (err) { notify(err.message); }
         });
 
-        function showSection(id) {
-            ['sec-library', 'sec-timetable'].forEach((s) => $(s).classList.toggle('d-none', s !== id));
-            const el = $(id); el.classList.remove('anim-in'); void el.offsetWidth; el.classList.add('anim-in');
-        }
-
-        function skeletonCards(n = 8) {
-            return Array.from({ length: n }, () => `<div class="col-md-6 col-lg-4 col-xl-4 mb-4" aria-hidden="true"><div class="card p-3 border-0 h-100 placeholder-glow">
-                <span class="placeholder col-4 mb-3 rounded"></span><span class="placeholder col-10 mb-2 rounded"></span><span class="placeholder col-6 mb-4 rounded"></span><span class="placeholder col-12 rounded-pill mt-auto" style="height:31px"></span></div></div>`).join('');
-        }
+        function showSection(id) { ['sec-library', 'sec-timetable'].forEach((s) => $(s).classList.toggle('d-none', s !== id)); const el = $(id); el.classList.remove('anim-in'); void el.offsetWidth; el.classList.add('anim-in'); }
+        function skeletonCards(n = 8) { return Array.from({ length: n }, () => `<div class="col-md-6 col-lg-4 col-xl-4 mb-4" aria-hidden="true"><div class="card p-3 border-0 h-100 placeholder-glow"><span class="placeholder col-4 mb-3 rounded"></span><span class="placeholder col-10 mb-2 rounded"></span><span class="placeholder col-6 mb-4 rounded"></span><span class="placeholder col-12 rounded-pill mt-auto" style="height:31px"></span></div></div>`).join(''); }
 
         function switchCategory(cat, el) {
-            currentCategory = cat; currentPage = 1; currentSubject = ''; currentGrade = '';
-            document.querySelectorAll('#mainNav .nav-link').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); showSection('sec-library');
+            currentCategory = cat; currentPage = 1; currentSubject = ''; currentGrade = ''; currentWeek = '';
+            document.querySelectorAll('#mainNav .nav-link').forEach(b => b.classList.remove('active')); el.classList.add('active'); showSection('sec-library');
             $('lectureGrid').innerHTML = ''; $('pager').innerHTML = '';
-            
-            $('gradeFilter').value = ''; $('subjectFilter').value = ''; if($('albumSelectFilter')) $('albumSelectFilter').value = '';
-            
-            const isImageLib = cat === 'thu_vien_hinh_anh';
-            const needsFilter = ['bai_giang', 'bai_tap', 'ke_hoach_giang_day', 'de_kiem_tra', 'tich_hop'].includes(cat);
-            
-            $('gradeFilterContainer').classList.toggle('d-none', !needsFilter);
-            $('subjectFilterContainer').classList.toggle('d-none', !needsFilter);
-            $('albumFilterContainer').classList.toggle('d-none', !isImageLib);
-            
+            $('gradeFilter').value = ''; $('subjectFilter').value = ''; $('weekFilter').value = '';
+            const isImageLib = cat === 'thu_vien_hinh_anh'; const needsFilter = ['bai_giang', 'bai_tap', 'ke_hoach_giang_day', 'de_kiem_tra', 'tich_hop'].includes(cat);
+            $('gradeFilterContainer').classList.toggle('d-none', !needsFilter); $('subjectFilterContainer').classList.toggle('d-none', !needsFilter); $('weekFilterContainer').classList.toggle('d-none', !needsFilter); $('albumFilterContainer').classList.toggle('d-none', !isImageLib);
             if (isImageLib) loadAlbums();
             const offcanvasEl = document.getElementById('sidebarMenu'); if (offcanvasEl) { const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl); if (offcanvas) offcanvas.hide(); }
             loadLectures();
         }
 
-        $('btnCreateAlbum')?.addEventListener('click', () => {
-            showPrompt('Tạo Album mới', 'Vui lòng nhập tên Album ảnh bạn muốn tạo:', 'Ví dụ: Lễ hội mùa xuân 2026...', (albumName) => {
-                if (albumName && albumName.trim()) location.href = `upload.html?cat=thu_vien_hinh_anh&album=${encodeURIComponent(albumName.trim())}`;
-            });
-        });
-
-        function switchTab(el) {
-            document.querySelectorAll('#mainNav .nav-link').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); showSection('sec-timetable');
-            const offcanvasEl = document.getElementById('sidebarMenu'); const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl); if (offcanvas) offcanvas.hide();
-            if (!timetableLoaded) { timetableLoaded = true; loadClasses(); }
-        }
-
-        async function loadClasses(keepValue) {
-            const sel = $('classSelect');
-            try {
-                const classes = await api('/api/classes');
-                sel.innerHTML = classes.map((c) => `<option value="${escapeHtml(c.class_id)}">${escapeHtml(c.class_name)}${c.teacher_name ? ' - ' + escapeHtml(c.teacher_name) : ''}</option>`).join('');
-                if (!classes.length) { $('scheduleBody').innerHTML = `<tr><td colspan="7">${emptyStateHtml('📅','Chưa có lớp học', 'Hệ thống chưa có dữ liệu thời khóa biểu.')}</td></tr>`; return classes; }
-                if (keepValue && classes.some((c) => c.class_id === keepValue)) sel.value = keepValue; loadSchedule(sel.value); return classes;
-            } catch (e) { notify(e.message); return []; }
-        }
-
-        async function loadSchedule(classId) {
-            const body = $('scheduleBody');
-            try {
-                currentSchedule = await api(`/api/timetable/${encodeURIComponent(classId)}`);
-                body.innerHTML = currentSchedule.map((row) => `<tr><td class="bg-body-tertiary"><b>${escapeHtml(row.period)}</b></td><td class="bg-body-tertiary text-secondary small">${escapeHtml(row.time)}</td><td>${escapeHtml(row.t2)}</td><td>${escapeHtml(row.t3)}</td><td>${escapeHtml(row.t4)}</td><td>${escapeHtml(row.t5)}</td><td>${escapeHtml(row.t6)}</td></tr>`).join('');
-            } catch (e) { currentSchedule = []; body.innerHTML = `<tr><td colspan="7" class="text-danger">${escapeHtml(e.message)}</td></tr>`; }
-        }
-
+        $('btnCreateAlbum')?.addEventListener('click', () => { showPrompt('Tạo Album mới', 'Vui lòng nhập tên Album ảnh bạn muốn tạo:', 'Ví dụ: Lễ hội mùa xuân 2026...', (albumName) => { if (albumName && albumName.trim()) location.href = `upload.html?cat=thu_vien_hinh_anh&album=${encodeURIComponent(albumName.trim())}`; }); });
+        function switchTab(el) { document.querySelectorAll('#mainNav .nav-link').forEach(b => b.classList.remove('active')); el.classList.add('active'); showSection('sec-timetable'); const offcanvasEl = document.getElementById('sidebarMenu'); const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl); if (offcanvas) offcanvas.hide(); if (!timetableLoaded) { timetableLoaded = true; loadClasses(); } }
+        async function loadClasses(keepValue) { const sel = $('classSelect'); try { const classes = await api('/api/classes'); sel.innerHTML = classes.map((c) => `<option value="${escapeHtml(c.class_id)}">${escapeHtml(c.class_name)}${c.teacher_name ? ' - ' + escapeHtml(c.teacher_name) : ''}</option>`).join(''); if (!classes.length) { $('scheduleBody').innerHTML = `<tr><td colspan="7">${emptyStateHtml('📅','Chưa có lớp học', 'Hệ thống chưa có dữ liệu thời khóa biểu.')}</td></tr>`; return classes; } if (keepValue && classes.some((c) => c.class_id === keepValue)) sel.value = keepValue; loadSchedule(sel.value); return classes; } catch (e) { notify(e.message); return []; } }
+        async function loadSchedule(classId) { const body = $('scheduleBody'); try { currentSchedule = await api(`/api/timetable/${encodeURIComponent(classId)}`); body.innerHTML = currentSchedule.map((row) => `<tr><td class="bg-body-tertiary"><b>${escapeHtml(row.period)}</b></td><td class="bg-body-tertiary text-secondary small">${escapeHtml(row.time)}</td><td>${escapeHtml(row.t2)}</td><td>${escapeHtml(row.t3)}</td><td>${escapeHtml(row.t4)}</td><td>${escapeHtml(row.t5)}</td><td>${escapeHtml(row.t6)}</td></tr>`).join(''); } catch (e) { currentSchedule = []; body.innerHTML = `<tr><td colspan="7" class="text-danger">${escapeHtml(e.message)}</td></tr>`; } }
         const SCHEDULE_FIELDS = ['period', 'time', 't2', 't3', 't4', 't5', 't6'];
-        function renderEditor() {
-            $('editorTableBody').innerHTML = editorRows.map((row, i) => `<tr>` + SCHEDULE_FIELDS.map((f) => `<td><input type="text" class="form-control form-control-sm bg-body border-0" maxlength="60" data-i="${i}" data-f="${f}" value="${escapeHtml(row[f])}"></td>`).join('') + `<td><button type="button" class="btn btn-outline-danger btn-sm rounded-circle" data-del="${i}"><i class="fa fa-trash"></i></button></td></tr>`).join('');
-        }
+        function renderEditor() { $('editorTableBody').innerHTML = editorRows.map((row, i) => `<tr>` + SCHEDULE_FIELDS.map((f) => `<td><input type="text" class="form-control form-control-sm bg-body border-0" maxlength="60" data-i="${i}" data-f="${f}" value="${escapeHtml(row[f])}"></td>`).join('') + `<td><button type="button" class="btn btn-outline-danger btn-sm rounded-circle" data-del="${i}"><i class="fa fa-trash"></i></button></td></tr>`).join(''); }
         function openScheduleEditor() { editorRows = currentSchedule.map((r) => ({ ...r })); renderEditor(); showModal('editScheduleModal'); }
-        async function saveSchedule() {
-            const classId = $('classSelect').value; if (!classId) return; if (!editorRows.length) return notify('TKB cần ít nhất 1 tiết.');
-            const btn = $('btnSaveSchedule'); setBusy(btn, true, 'Đang lưu...');
-            try { await api(`/api/timetable/${encodeURIComponent(classId)}`, { method: 'POST', json: { schedule: editorRows } }); hideModal('editScheduleModal'); notify('Đã lưu thời khóa biểu.', 'success', 3000); loadSchedule(classId); } catch (e) { notify(e.message); }
-            setBusy(btn, false);
-        }
-
+        async function saveSchedule() { const classId = $('classSelect').value; if (!classId) return; if (!editorRows.length) return notify('TKB cần ít nhất 1 tiết.'); const btn = $('btnSaveSchedule'); setBusy(btn, true, 'Đang lưu...'); try { await api(`/api/timetable/${encodeURIComponent(classId)}`, { method: 'POST', json: { schedule: editorRows } }); hideModal('editScheduleModal'); notify('Đã lưu thời khóa biểu.', 'success', 3000); loadSchedule(classId); } catch (e) { notify(e.message); } setBusy(btn, false); }
         async function openClasses() { showModal('classesModal'); await renderClassesTable(); }
-        async function renderClassesTable() {
-            try {
-                const classes = await api('/api/classes');
-                $('classesBody').innerHTML = classes.length ? classes.map((c) => `<tr><td class="fw-bold">${escapeHtml(c.class_id)}</td><td>${escapeHtml(c.class_name)}</td><td>${escapeHtml(c.teacher_name)}</td><td class="text-end text-nowrap"><button type="button" class="btn btn-light border btn-sm rounded-pill fw-bold me-1" data-edit-class="${escapeHtml(c.class_id)}" data-name="${escapeHtml(c.class_name)}" data-teacher="${escapeHtml(c.teacher_name)}">Sửa</button><button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-bold" data-del-class="${escapeHtml(c.class_id)}">Xóa</button></td></tr>`).join('') : `<tr><td colspan="4">${emptyStateHtml('🏫','Chưa có lớp học', 'Chưa có dữ liệu.')}</td></tr>`;
-            } catch (e) { notify(e.message); }
-        }
-
-        async function loadTrash() {
-            const tbody = $('trashBody'); tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>';
-            try {
-                const items = await api('/api/trash');
-                tbody.innerHTML = items.length ? items.map(it => `<tr><td class="text-center"><input type="checkbox" class="trash-checkbox" style="transform: scale(1.3); cursor: pointer;" value="${it.id}"></td><td class="fw-bold">${getFileIcon(it.category_type==='thu_vien_hinh_anh'?'jpg':'pdf')} ${escapeHtml(it.title)}</td><td><span class="badge bg-body-tertiary text-body border">${escapeHtml(CATEGORY_LABELS[it.category_type] || it.category_type)}</span></td><td class="text-danger fw-bold text-end pe-3">Còn ${it.days_left} ngày</td></tr>`).join('') : `<tr><td colspan="4">${emptyStateHtml('🗑️', 'Thùng rác trống', 'Không có tài liệu nào trong thùng rác.')}</td></tr>`;
-                $('selectAllTrash').checked = false;
-            } catch(e) { notify(e.message); }
-        }
-
+        async function renderClassesTable() { try { const classes = await api('/api/classes'); $('classesBody').innerHTML = classes.length ? classes.map((c) => `<tr><td class="fw-bold">${escapeHtml(c.class_id)}</td><td>${escapeHtml(c.class_name)}</td><td>${escapeHtml(c.teacher_name)}</td><td class="text-end text-nowrap"><button type="button" class="btn btn-light border btn-sm rounded-pill fw-bold me-1" data-edit-class="${escapeHtml(c.class_id)}" data-name="${escapeHtml(c.class_name)}" data-teacher="${escapeHtml(c.teacher_name)}">Sửa</button><button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-bold" data-del-class="${escapeHtml(c.class_id)}">Xóa</button></td></tr>`).join('') : `<tr><td colspan="4">${emptyStateHtml('🏫','Chưa có lớp học', 'Chưa có dữ liệu.')}</td></tr>`; } catch (e) { notify(e.message); } }
+        async function loadTrash() { const tbody = $('trashBody'); tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>'; try { const items = await api('/api/trash'); tbody.innerHTML = items.length ? items.map(it => `<tr><td class="text-center"><input type="checkbox" class="trash-checkbox" style="transform: scale(1.3); cursor: pointer;" value="${it.id}"></td><td class="fw-bold">${getFileIcon(it.category_type==='thu_vien_hinh_anh'?'jpg':'pdf')} ${escapeHtml(it.title)}</td><td><span class="badge bg-body-tertiary text-body border">${escapeHtml(CATEGORY_LABELS[it.category_type] || it.category_type)}</span></td><td class="text-danger fw-bold text-end pe-3">Còn ${it.days_left} ngày</td></tr>`).join('') : `<tr><td colspan="4">${emptyStateHtml('🗑️', 'Thùng rác trống', 'Không có tài liệu nào trong thùng rác.')}</td></tr>`; $('selectAllTrash').checked = false; } catch(e) { notify(e.message); } }
         $('selectAllTrash')?.addEventListener('change', (e) => { document.querySelectorAll('.trash-checkbox').forEach(cb => cb.checked = e.target.checked); });
-
-        async function processTrash(action) {
-            const cbs = document.querySelectorAll('.trash-checkbox:checked'); const ids = Array.from(cbs).map(cb => Number(cb.value));
-            if(!ids.length) return notify('Chưa chọn tài liệu nào!');
-            const exec = async () => {
-                try {
-                    const endpoint = action === 'restore' ? '/api/trash/restore' : '/api/trash/permanent';
-                    await api(endpoint, { method: 'POST', json: { ids } }); notify(action === 'restore' ? 'Đã khôi phục!' : 'Đã xóa vĩnh viễn!', 'success');
-                    loadTrash(); if(!$('trashModal').classList.contains('show')) loadLectures(); 
-                } catch(e) { notify(e.message); }
-            };
-            if(action === 'permanent') showConfirm('Xóa vĩnh viễn', 'CẢNH BÁO: Dữ liệu bị xóa sẽ vĩnh viễn biến mất khỏi đám mây. Bạn có chắc chắn?', exec); else exec();
-        }
-        $('btnRestoreSelected')?.addEventListener('click', () => processTrash('restore')); $('btnHardDeleteSelected')?.addEventListener('click', () => processTrash('permanent'));
-        $('trashModal')?.addEventListener('hidden.bs.modal', () => { loadLectures(); loadAlbums(); });
-
-        async function checkPendingCount() {
-            try { const list = await api('/api/admin/pending-teachers'); const badge = $('pendingCountBadge'); if (!badge) return; badge.textContent = list.length; badge.classList.toggle('d-none', list.length === 0); } catch (e) { }
-        }
-
-        function lastSeenText(u) {
-            if (u.online) return 'Đang online'; if (u.seen_ago == null) return 'Chưa hoạt động';
-            const mins = Math.max(1, Math.round(u.seen_ago / 60)); if (mins < 60) return `${mins} phút trước`;
-            const hrs = Math.round(mins / 60); if (hrs < 24) return `${hrs} giờ trước`; return `${Math.round(hrs / 24)} ngày trước`;
-        }
+        async function processTrash(action) { const cbs = document.querySelectorAll('.trash-checkbox:checked'); const ids = Array.from(cbs).map(cb => Number(cb.value)); if(!ids.length) return notify('Chưa chọn tài liệu nào!'); const exec = async () => { try { const endpoint = action === 'restore' ? '/api/trash/restore' : '/api/trash/permanent'; await api(endpoint, { method: 'POST', json: { ids } }); notify(action === 'restore' ? 'Đã khôi phục!' : 'Đã xóa vĩnh viễn!', 'success'); loadTrash(); if(!$('trashModal').classList.contains('show')) loadLectures(); } catch(e) { notify(e.message); } }; if(action === 'permanent') showConfirm('Xóa vĩnh viễn', 'CẢNH BÁO: Dữ liệu bị xóa sẽ vĩnh viễn biến mất khỏi đám mây. Bạn có chắc chắn?', exec); else exec(); }
+        $('btnRestoreSelected')?.addEventListener('click', () => processTrash('restore')); $('btnHardDeleteSelected')?.addEventListener('click', () => processTrash('permanent')); $('trashModal')?.addEventListener('hidden.bs.modal', () => { loadLectures(); loadAlbums(); });
+        async function checkPendingCount() { try { const list = await api('/api/admin/pending-teachers'); const badge = $('pendingCountBadge'); if (!badge) return; badge.textContent = list.length; badge.classList.toggle('d-none', list.length === 0); } catch (e) { } }
+        function lastSeenText(u) { if (u.online) return 'Đang online'; if (u.seen_ago == null) return 'Chưa hoạt động'; const mins = Math.max(1, Math.round(u.seen_ago / 60)); if (mins < 60) return `${mins} phút trước`; const hrs = Math.round(mins / 60); if (hrs < 24) return `${hrs} giờ trước`; return `${Math.round(hrs / 24)} ngày trước`; }
         function presenceCell(u) { return `<span class="online-dot ${u.online ? 'on' : ''}" aria-hidden="true"></span><span class="small ${u.online ? 'text-success fw-semibold' : 'text-muted'}">${escapeHtml(lastSeenText(u))}</span>`; }
         function startPresenceRefresh(fn) { stopPresenceRefresh(); presenceTimer = setInterval(() => { if (!document.hidden) fn(); }, 30000); }
         function stopPresenceRefresh() { clearInterval(presenceTimer); presenceTimer = null; }
-
-        async function loadAllTeachers() {
-            const tbody = $('teachersListBody');
-            try {
-                const list = await api('/api/admin/teachers'); currentTeachersList = list;
-                $('teachersOnlineCount').textContent = `(${list.filter((t) => t.online).length}/${list.length} đang online)`;
-                tbody.innerHTML = list.length ? list.map((t) => {
-                    const permBtn = t.can_manage_docs ? `<button type="button" class="btn btn-outline-warning btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="revoke_perm">Tước quyền Sửa</button>` : `<button type="button" class="btn btn-outline-success btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="grant_perm">Cấp quyền Sửa</button>`;
-                    return `<tr><td class="fw-bold">${escapeHtml(t.full_name)}</td><td class="text-nowrap">${presenceCell(t)}</td><td>${escapeHtml(t.email)}</td><td class="text-center">${escapeHtml(t.dob || '-')}</td><td class="text-center">${escapeHtml(t.phone || '-')}</td><td class="text-wrap" style="min-width: 220px;">${escapeHtml(t.workplace || '-')}</td><td>${escapeHtml(t.position || '-')}</td><td class="text-center">${permBtn}<button type="button" class="btn btn-outline-primary btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="reset_pw"><i class="fa fa-key"></i> Đặt lại MK</button><button type="button" class="btn btn-outline-danger btn-sm mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="delete">Xóa</button></td></tr>`;
-                }).join('') : `<tr><td colspan="8">${emptyStateHtml('👨‍🏫', 'Chưa có giáo viên', 'Danh sách giáo viên hiện đang trống.')}</td></tr>`;
-            } catch (e) { notify(e.message); }
-        }
-
-        function studentRow(s) {
-            const id = Number(s.id); const status = s.is_locked ? '<span class="badge bg-danger">Đã khóa</span>' : presenceCell(s);
-            const lockBtn = s.is_locked ? `<button type="button" class="btn btn-outline-success btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="unlock">Mở khóa</button>` : `<button type="button" class="btn btn-outline-warning btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="lock">Khóa</button>`;
-            return `<tr class="${s.is_locked ? 'table-secondary' : ''}"><td class="fw-bold">${escapeHtml(s.full_name)}</td><td>${escapeHtml(s.email)}</td><td class="text-center">${escapeHtml(new Date(s.created_at).toLocaleDateString('vi-VN'))}</td><td class="text-center text-nowrap">${status}</td><td class="text-center text-nowrap">${lockBtn}<button type="button" class="btn btn-outline-primary btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="reset_pw"><i class="fa fa-key"></i> Đặt lại MK</button><button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill" data-student="${id}" data-act="delete">Xóa</button></td></tr>`;
-        }
-
-        async function loadStudents() {
-            const seq = ++studentSeq; const params = new URLSearchParams({ page: studentPage, limit: 15 }); const q = $('studentSearch').value.trim(); if (q) params.set('search', q);
-            const tbody = $('studentsListBody');
-            try {
-                const data = await api('/api/admin/students?' + params.toString());
-                if (seq !== studentSeq) return;
-                if (!data.items.length && studentPage > 1) { studentPage = data.pages; return loadStudents(); }
-                $('studentsOnlineCount').textContent = `(${data.online} đang online)`;
-                tbody.innerHTML = data.items.length ? data.items.map(studentRow).join('') : `<tr><td colspan="5">${emptyStateHtml('🎒', 'Chưa có học sinh', 'Không tìm thấy dữ liệu học sinh.')}</td></tr>`;
-                $('studentsPager').innerHTML = data.total ? `<div class="d-flex align-items-center gap-3"><small class="text-muted fw-bold">${data.total} học sinh (Trang ${data.page}/${data.pages})</small><div class="btn-group shadow-sm"><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page - 1}" ${data.page <= 1 ? 'disabled' : ''}>&laquo; Trước</button><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page + 1}" ${data.page >= data.pages ? 'disabled' : ''}>Sau &raquo;</button></div></div>` : '';
-            } catch (e) { if (seq !== studentSeq || e.status === 401) return; notify(e.message); }
-        }
-
+        async function loadAllTeachers() { const tbody = $('teachersListBody'); try { const list = await api('/api/admin/teachers'); currentTeachersList = list; $('teachersOnlineCount').textContent = `(${list.filter((t) => t.online).length}/${list.length} đang online)`; tbody.innerHTML = list.length ? list.map((t) => { const permBtn = t.can_manage_docs ? `<button type="button" class="btn btn-outline-warning btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="revoke_perm">Tước quyền Sửa</button>` : `<button type="button" class="btn btn-outline-success btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="grant_perm">Cấp quyền Sửa</button>`; return `<tr><td class="fw-bold">${escapeHtml(t.full_name)}</td><td class="text-nowrap">${presenceCell(t)}</td><td>${escapeHtml(t.email)}</td><td class="text-center">${escapeHtml(t.dob || '-')}</td><td class="text-center">${escapeHtml(t.phone || '-')}</td><td class="text-wrap" style="min-width: 220px;">${escapeHtml(t.workplace || '-')}</td><td>${escapeHtml(t.position || '-')}</td><td class="text-center">${permBtn}<button type="button" class="btn btn-outline-primary btn-sm me-1 mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="reset_pw"><i class="fa fa-key"></i> Đặt lại MK</button><button type="button" class="btn btn-outline-danger btn-sm mb-1 fw-bold rounded-pill" data-teacher="${Number(t.id)}" data-act="delete">Xóa</button></td></tr>`; }).join('') : `<tr><td colspan="8">${emptyStateHtml('👨‍🏫', 'Chưa có giáo viên', 'Danh sách giáo viên hiện đang trống.')}</td></tr>`; } catch (e) { notify(e.message); } }
+        function studentRow(s) { const id = Number(s.id); const status = s.is_locked ? '<span class="badge bg-danger">Đã khóa</span>' : presenceCell(s); const lockBtn = s.is_locked ? `<button type="button" class="btn btn-outline-success btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="unlock">Mở khóa</button>` : `<button type="button" class="btn btn-outline-warning btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="lock">Khóa</button>`; return `<tr class="${s.is_locked ? 'table-secondary' : ''}"><td class="fw-bold">${escapeHtml(s.full_name)}</td><td>${escapeHtml(s.email)}</td><td class="text-center">${escapeHtml(new Date(s.created_at).toLocaleDateString('vi-VN'))}</td><td class="text-center text-nowrap">${status}</td><td class="text-center text-nowrap">${lockBtn}<button type="button" class="btn btn-outline-primary btn-sm me-1 fw-bold rounded-pill" data-student="${id}" data-act="reset_pw"><i class="fa fa-key"></i> Đặt lại MK</button><button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill" data-student="${id}" data-act="delete">Xóa</button></td></tr>`; }
+        async function loadStudents() { const seq = ++studentSeq; const params = new URLSearchParams({ page: studentPage, limit: 15 }); const q = $('studentSearch').value.trim(); if (q) params.set('search', q); const tbody = $('studentsListBody'); try { const data = await api('/api/admin/students?' + params.toString()); if (seq !== studentSeq) return; if (!data.items.length && studentPage > 1) { studentPage = data.pages; return loadStudents(); } $('studentsOnlineCount').textContent = `(${data.online} đang online)`; tbody.innerHTML = data.items.length ? data.items.map(studentRow).join('') : `<tr><td colspan="5">${emptyStateHtml('🎒', 'Chưa có học sinh', 'Không tìm thấy dữ liệu học sinh.')}</td></tr>`; $('studentsPager').innerHTML = data.total ? `<div class="d-flex align-items-center gap-3"><small class="text-muted fw-bold">${data.total} học sinh (Trang ${data.page}/${data.pages})</small><div class="btn-group shadow-sm"><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page - 1}" ${data.page <= 1 ? 'disabled' : ''}>&laquo; Trước</button><button type="button" class="btn btn-light border fw-bold px-3" data-page="${data.page + 1}" ${data.page >= data.pages ? 'disabled' : ''}>Sau &raquo;</button></div></div>` : ''; } catch (e) { if (seq !== studentSeq || e.status === 401) return; notify(e.message); } }
+        
         function resetUserPassword(id) {
-            showPrompt('Đặt lại mật khẩu', 'Nhập mật khẩu mới (6 - 72 ký tự) rồi báo cho người dùng. Họ nên đổi lại sau khi đăng nhập.', 'Mật khẩu mới', async (val) => {
+            showPrompt('Đặt lại mật khẩu', 'Nhập mật khẩu mới (6 - 72 ký tự) rồi báo cho người dùng.', 'Mật khẩu mới', async (val) => {
                 const pw = (val || '').trim();
                 if (pw.length < 6 || pw.length > 72) { notify('Mật khẩu phải từ 6 đến 72 ký tự.'); return; }
                 try {
                     const res = await api(`/api/admin/users/${id}/reset-password`, { method: 'POST', json: { new_password: pw } });
                     notify(res.message, 'success', 5000);
                 } catch (e) { notify(e.message); }
-            });
+            }, 'text');
         }
 
-        function manageStudent(id, action) {
-            if (action === 'reset_pw') { resetUserPassword(id); return; }
-            const exec = async () => {
-                try {
-                    if (action === 'delete') await api(`/api/admin/students/${id}`, { method: 'DELETE' }); else await api(`/api/admin/students/${id}/lock`, { method: 'POST', json: { locked: action === 'lock' } });
-                    notify(action === 'delete' ? 'Đã xóa tài khoản.' : action === 'lock' ? 'Đã khóa tài khoản.' : 'Đã mở khóa tài khoản.', 'success', 3000); loadStudents();
-                } catch (e) { notify(e.message); }
-            };
-            if (action === 'lock') showConfirm('Khóa tài khoản', 'Học sinh sẽ bị đăng xuất và không thể đăng nhập lại cho đến khi được mở khóa. Tiếp tục?', exec, 'Khóa', 'warning');
-            else if (action === 'delete') showConfirm('Xóa tài khoản', 'Xóa vĩnh viễn tài khoản học sinh này? Các đánh giá em đã viết vẫn được giữ lại.', exec);
-            else exec();
-        }
-
-        async function exportStudents() {
-            const btn = $('btnExportStudents'); setBusy(btn, true, 'Đang xuất...');
-            try {
-                const params = new URLSearchParams({ all: 1 }); const q = $('studentSearch').value.trim(); if (q) params.set('search', q);
-                const { items } = await api('/api/admin/students?' + params.toString());
-                if (!items.length) { notify('Không có dữ liệu!'); } else {
-                    const rows = items.map((s, i) => ({ 'STT': i + 1, 'Họ và tên': s.full_name || '', 'Email': s.email || '', 'Ngày đăng ký': new Date(s.created_at).toLocaleDateString('vi-VN'), 'Trạng thái': s.is_locked ? 'Đã khóa' : 'Hoạt động' }));
-                    const ws = XLSX.utils.json_to_sheet(rows); ws['!cols'] = [{wch: 5}, {wch: 28}, {wch: 32}, {wch: 15}, {wch: 12}];
-                    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'DanhSachHocSinh'); XLSX.writeFile(wb, `DSHS_${new Date().toISOString().slice(0, 10)}.xlsx`);
-                }
-            } catch (e) { notify(e.message); } setBusy(btn, false);
-        }
-
-        async function loadPendingTeachers() {
-            const tbody = $('pendingTeachersBody');
-            try {
-                const list = await api('/api/admin/pending-teachers');
-                tbody.innerHTML = list.length ? list.map((t) => `<tr><td>${escapeHtml(t.full_name)}<br><small class="text-muted">${escapeHtml(t.workplace || 'Chưa cập nhật ĐVCT')}</small></td><td>${escapeHtml(t.email)}<br><small class="text-muted">${escapeHtml(t.phone || 'Chưa cập nhật SĐT')}</small></td><td class="text-end text-nowrap"><button type="button" class="btn btn-success btn-sm me-1 fw-bold rounded-pill px-3" data-teacher="${Number(t.id)}" data-act="approve">Duyệt</button><button type="button" class="btn btn-danger btn-sm fw-bold rounded-pill px-3" data-teacher="${Number(t.id)}" data-act="reject">Từ chối</button></td></tr>`).join('') : `<tr><td colspan="3">${emptyStateHtml('✅', 'Hoàn tất', 'Không có hồ sơ nào chờ duyệt.')}</td></tr>`;
-            } catch (e) { notify(e.message); }
-        }
-
-        function manageTeacher(id, action) {
-            if (action === 'reset_pw') { resetUserPassword(id); return; }
-            if (action === 'grant_perm' || action === 'revoke_perm') {
-                const exec = async () => { try { const res = await api(`/api/admin/teachers/${id}/permission`, { method: 'POST', json: { can_manage_docs: action === 'grant_perm' } }); notify(res.message, 'success', 3000); loadAllTeachers(); } catch (e) { notify(e.message); } };
-                exec(); return;
-            }
-            const exec = async () => {
-                try {
-                    if (action === 'delete') { await api('/api/admin/delete-teacher', { method: 'POST', json: { teacher_id: id } }); loadAllTeachers(); } 
-                    else { await api('/api/admin/manage-teacher', { method: 'POST', json: { teacher_id: id, action } }); loadPendingTeachers(); }
-                    checkPendingCount();
-                } catch (e) { notify(e.message); }
-            };
-            if (action === 'delete') showConfirm('Xóa giáo viên', 'Bạn có chắc chắn muốn xóa tài khoản giáo viên này?', exec);
-            else if (action === 'reject') showConfirm('Từ chối hồ sơ', 'Từ chối và xóa hồ sơ đăng ký này?', exec);
-            else exec();
-        }
-
+        function manageStudent(id, action) { if (action === 'reset_pw') { resetUserPassword(id); return; } const exec = async () => { try { if (action === 'delete') await api(`/api/admin/students/${id}`, { method: 'DELETE' }); else await api(`/api/admin/students/${id}/lock`, { method: 'POST', json: { locked: action === 'lock' } }); notify(action === 'delete' ? 'Đã xóa tài khoản.' : action === 'lock' ? 'Đã khóa tài khoản.' : 'Đã mở khóa tài khoản.', 'success', 3000); loadStudents(); } catch (e) { notify(e.message); } }; if (action === 'lock') showConfirm('Khóa tài khoản', 'Học sinh sẽ bị đăng xuất và không thể đăng nhập lại cho đến khi được mở khóa. Tiếp tục?', exec, 'Khóa', 'warning'); else if (action === 'delete') showConfirm('Xóa tài khoản', 'Xóa vĩnh viễn tài khoản học sinh này? Các đánh giá em đã viết vẫn được giữ lại.', exec); else exec(); }
+        async function exportStudents() { const btn = $('btnExportStudents'); setBusy(btn, true, 'Đang xuất...'); try { const params = new URLSearchParams({ all: 1 }); const q = $('studentSearch').value.trim(); if (q) params.set('search', q); const { items } = await api('/api/admin/students?' + params.toString()); if (!items.length) { notify('Không có dữ liệu!'); } else { const rows = items.map((s, i) => ({ 'STT': i + 1, 'Họ và tên': s.full_name || '', 'Email': s.email || '', 'Ngày đăng ký': new Date(s.created_at).toLocaleDateString('vi-VN'), 'Trạng thái': s.is_locked ? 'Đã khóa' : 'Hoạt động' })); const ws = XLSX.utils.json_to_sheet(rows); ws['!cols'] = [{wch: 5}, {wch: 28}, {wch: 32}, {wch: 15}, {wch: 12}]; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'DanhSachHocSinh'); XLSX.writeFile(wb, `DSHS_${new Date().toISOString().slice(0, 10)}.xlsx`); } } catch (e) { notify(e.message); } setBusy(btn, false); }
+        async function loadPendingTeachers() { const tbody = $('pendingTeachersBody'); try { const list = await api('/api/admin/pending-teachers'); tbody.innerHTML = list.length ? list.map((t) => `<tr><td>${escapeHtml(t.full_name)}<br><small class="text-muted">${escapeHtml(t.workplace || 'Chưa cập nhật ĐVCT')}</small></td><td>${escapeHtml(t.email)}<br><small class="text-muted">${escapeHtml(t.phone || 'Chưa cập nhật SĐT')}</small></td><td class="text-end text-nowrap"><button type="button" class="btn btn-success btn-sm me-1 fw-bold rounded-pill px-3" data-teacher="${Number(t.id)}" data-act="approve">Duyệt</button><button type="button" class="btn btn-danger btn-sm fw-bold rounded-pill px-3" data-teacher="${Number(t.id)}" data-act="reject">Từ chối</button></td></tr>`).join('') : `<tr><td colspan="3">${emptyStateHtml('✅', 'Hoàn tất', 'Không có hồ sơ nào chờ duyệt.')}</td></tr>`; } catch (e) { notify(e.message); } }
+        function manageTeacher(id, action) { if (action === 'reset_pw') { resetUserPassword(id); return; } if (action === 'grant_perm' || action === 'revoke_perm') { const exec = async () => { try { const res = await api(`/api/admin/teachers/${id}/permission`, { method: 'POST', json: { can_manage_docs: action === 'grant_perm' } }); notify(res.message, 'success', 3000); loadAllTeachers(); } catch (e) { notify(e.message); } }; exec(); return; } const exec = async () => { try { if (action === 'delete') { await api('/api/admin/delete-teacher', { method: 'POST', json: { teacher_id: id } }); loadAllTeachers(); } else { await api('/api/admin/manage-teacher', { method: 'POST', json: { teacher_id: id, action } }); loadPendingTeachers(); } checkPendingCount(); } catch (e) { notify(e.message); } }; if (action === 'delete') showConfirm('Xóa giáo viên', 'Bạn có chắc chắn muốn xóa tài khoản giáo viên này?', exec); else if (action === 'reject') showConfirm('Từ chối hồ sơ', 'Từ chối và xóa hồ sơ đăng ký này?', exec); else exec(); }
+        
         function bindEvents() {
             $('mainNav').addEventListener('click', (e) => { const btn = e.target.closest('button.nav-link'); if (!btn) return; if (btn.dataset.tab) switchTab(btn); else switchCategory(btn.dataset.category, btn); });
-            $('gradeFilter').addEventListener('change', (e) => { currentGrade = e.target.value; currentPage = 1; loadLectures(); });$('albumSelectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });
-            $('subjectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });$('searchInput').addEventListener('input', debounce(() => { currentPage = 1; loadLectures(); }, 350));
+            $('gradeFilter').addEventListener('change', (e) => { currentGrade = e.target.value; currentPage = 1; loadLectures(); });
+            $('albumSelectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });
+            $('subjectFilter').addEventListener('change', (e) => { currentSubject = e.target.value; currentPage = 1; loadLectures(); });
+            $('weekFilter').addEventListener('change', (e) => { currentWeek = e.target.value; currentPage = 1; loadLectures(); });
+            $('searchInput').addEventListener('input', debounce(() => { currentPage = 1; loadLectures(); }, 350));
             $('pager').addEventListener('click', (e) => { const btn = e.target.closest('button[data-page]'); if (btn && !btn.disabled) { currentPage = Number(btn.dataset.page); loadLectures(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });$('lectureGrid').addEventListener('click', (e) => { const btn = e.target.closest('button[data-action]'); if (btn) btn.dataset.action === 'edit' ? openEditLecture(Number(btn.dataset.id)) : deleteLecture(Number(btn.dataset.id)); });
             $('lectureGrid').addEventListener('change', (e) => { if (e.target.classList.contains('lecture-checkbox')) { if (e.target.checked) checkedIds.add(Number(e.target.value)); else checkedIds.delete(Number(e.target.value)); updateBulkBar(); } });
-            $('btnCancelBulk').addEventListener('click', () => { checkedIds.clear(); document.querySelectorAll('.lecture-checkbox').forEach(cb => cb.checked = false); updateBulkBar(); });$('btnDeleteBulk').addEventListener('click', () => {
-                showConfirm('Xóa hàng loạt', `Chuyển ${checkedIds.size} tài liệu đã chọn vào Thùng rác?`, async () => {
-                    const btn = $('btnDeleteBulk'); setBusy(btn, true, 'Đang xử lý...');
-                    try { await api('/api/lectures/multi-delete', { method: 'POST', json: { ids: Array.from(checkedIds) } }); notify('Đã chuyển vào thùng rác thành công.', 'success', 3000); checkedIds.clear(); updateBulkBar(); loadLectures(); loadAlbums(); } catch(e) { notify(e.message); } setBusy(btn, false);
-                });
-            });
+            $('btnCancelBulk').addEventListener('click', () => { checkedIds.clear(); document.querySelectorAll('.lecture-checkbox').forEach(cb => cb.checked = false); updateBulkBar(); });$('btnDeleteBulk').addEventListener('click', () => { showConfirm('Xóa hàng loạt', `Chuyển ${checkedIds.size} tài liệu đã chọn vào Thùng rác?`, async () => { const btn = $('btnDeleteBulk'); setBusy(btn, true, 'Đang xử lý...'); try { await api('/api/lectures/multi-delete', { method: 'POST', json: { ids: Array.from(checkedIds) } }); notify('Đã chuyển vào thùng rác thành công.', 'success', 3000); checkedIds.clear(); updateBulkBar(); loadLectures(); loadAlbums(); } catch(e) { notify(e.message); } setBusy(btn, false); }); });
             
-            $('btnThemeToggle').addEventListener('click', toggleTheme);$('userMenuArea').addEventListener('click', (e) => {
-                const btn = e.target.closest('button[data-act]'); if (!btn) return;
-                if (btn.dataset.act === 'settings') openSettings();
-                if (btn.dataset.act === 'classes') openClasses();
-                if (btn.dataset.act === 'teachers') { showModal('teachersListModal'); loadAllTeachers(); startPresenceRefresh(loadAllTeachers); }
-                if (btn.dataset.act === 'students') { studentPage = 1; $('studentSearch').value = ''; $('studentsListBody').innerHTML = '';$('studentsPager').innerHTML = ''; showModal('studentsListModal'); loadStudents(); startPresenceRefresh(loadStudents); }
-                if (btn.dataset.act === 'pending') { showModal('pendingTeachersModal'); loadPendingTeachers(); }
-                if (btn.dataset.act === 'trash') { showModal('trashModal'); loadTrash(); }
-            });
+            $('btnThemeToggle').addEventListener('click', toggleTheme);$('userMenuArea').addEventListener('click', (e) => { const btn = e.target.closest('button[data-act]'); if (!btn) return; if (btn.dataset.act === 'settings') openSettings(); if (btn.dataset.act === 'classes') openClasses(); if (btn.dataset.act === 'teachers') { showModal('teachersListModal'); loadAllTeachers(); startPresenceRefresh(loadAllTeachers); } if (btn.dataset.act === 'students') { studentPage = 1; $('studentSearch').value = ''; $('studentsListBody').innerHTML = '';$('studentsPager').innerHTML = ''; showModal('studentsListModal'); loadStudents(); startPresenceRefresh(loadStudents); } if (btn.dataset.act === 'pending') { showModal('pendingTeachersModal'); loadPendingTeachers(); } if (btn.dataset.act === 'trash') { showModal('trashModal'); loadTrash(); } });
             
             ['teachersListModal', 'studentsListModal'].forEach((id) => $(id).addEventListener('hidden.bs.modal', stopPresenceRefresh));
             bindBannerEditor();
             
             $('studentSearch').addEventListener('input', debounce(() => { studentPage = 1; loadStudents(); }, 350));
             $('studentsPager').addEventListener('click', (e) => { const btn = e.target.closest('button[data-page]'); if (btn && !btn.disabled) { studentPage = Number(btn.dataset.page); loadStudents(); } });$('studentsListBody').addEventListener('click', (e) => { const btn = e.target.closest('button[data-student]'); if (btn) manageStudent(Number(btn.dataset.student), btn.dataset.act); });
-            $('btnExportStudents').addEventListener('click', exportStudents);$('btnExportExcel').addEventListener('click', () => {
-                if (!currentTeachersList || currentTeachersList.length === 0) { notify('Không có dữ liệu!'); return; }
-                const data = currentTeachersList.map((t, index) => ({ 'STT': index + 1, 'Họ và tên': t.full_name || '', 'Email': t.email || '', 'Ngày sinh': t.dob || '', 'Số điện thoại': t.phone || '', 'Đơn vị công tác': t.workplace || '', 'Chức vụ': t.position || '' }));
-                const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "DanhSachGiaoVien"); ws['!cols'] = [{wch: 5}, {wch: 25}, {wch: 25}, {wch: 15}, {wch: 15}, {wch: 35}, {wch: 20}]; XLSX.writeFile(workbook, `DSGV_${new Date().toISOString().slice(0, 10)}.xlsx`);
-            });
+            $('btnExportStudents').addEventListener('click', exportStudents);$('btnExportExcel').addEventListener('click', () => { if (!currentTeachersList || currentTeachersList.length === 0) { notify('Không có dữ liệu!'); return; } const data = currentTeachersList.map((t, index) => ({ 'STT': index + 1, 'Họ và tên': t.full_name || '', 'Email': t.email || '', 'Ngày sinh': t.dob || '', 'Số điện thoại': t.phone || '', 'Đơn vị công tác': t.workplace || '', 'Chức vụ': t.position || '' })); const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "DanhSachGiaoVien"); ws['!cols'] = [{wch: 5}, {wch: 25}, {wch: 25}, {wch: 15}, {wch: 15}, {wch: 35}, {wch: 20}]; XLSX.writeFile(wb, `DSGV_${new Date().toISOString().slice(0, 10)}.xlsx`); });
             ['teachersListBody', 'pendingTeachersBody'].forEach((id) => $(id).addEventListener('click', (e) => { const btn = e.target.closest('button[data-teacher]'); if (btn) manageTeacher(Number(btn.dataset.teacher), btn.dataset.act); }));
-            $('settingsForm').addEventListener('submit', async (e) => {                 e.preventDefault(); const btn =$('btnSaveSettings'); setBusy(btn, true, 'Đang lưu...');
-                try { await api('/api/settings', { method: 'POST', json: { schoolName: $('setSchoolName').value, slogan: $('setSlogan').value, contact:$('setContact').value, bannerFit: $('setBannerFit').value, logoUrl:$('setLogoUrl').value } }); hideModal('settingsModal'); notify('Đã lưu cài đặt.', 'success', 3000); loadSettings(); } catch (err) {}
-                try { if ($('setBanner').files.length > 0) { await api('/api/settings', { method: 'POST', form: new FormData(e.target) }); loadSettings(); } } catch (err) { notify(err.message); }
-                setBusy(btn, false);
-            });
+            $('settingsForm').addEventListener('submit', async (e) => { e.preventDefault(); const btn =$('btnSaveSettings'); setBusy(btn, true, 'Đang lưu...'); try { await api('/api/settings', { method: 'POST', json: { schoolName: $('setSchoolName').value, slogan: $('setSlogan').value, contact:$('setContact').value, bannerFit: $('setBannerFit').value, logoUrl:$('setLogoUrl').value } }); hideModal('settingsModal'); notify('Đã lưu cài đặt.', 'success', 3000); loadSettings(); } catch (err) {} try { if ($('setBanner').files.length > 0) { await api('/api/settings', { method: 'POST', form: new FormData(e.target) }); loadSettings(); } } catch (err) { notify(err.message); } setBusy(btn, false); });
             $('classSelect').addEventListener('change', (e) => loadSchedule(e.target.value));
             document.addEventListener('click', (e) => { if (e.target.closest('#btnEditSchedule')) openScheduleEditor(); });
-            $('btnSaveSchedule').addEventListener('click', saveSchedule);$('btnAddPeriod').addEventListener('click', () => {
-                if (editorRows.length >= 15) { notify('Tối đa 15 tiết.'); return; } editorRows.push({ period: `Tiết ${editorRows.length + 1}`, time: '', t2: '', t3: '', t4: '', t5: '', t6: '' }); renderEditor();
-            });
+            $('btnSaveSchedule').addEventListener('click', saveSchedule);$('btnAddPeriod').addEventListener('click', () => { if (editorRows.length >= 15) { notify('Tối đa 15 tiết.'); return; } editorRows.push({ period: `Tiết ${editorRows.length + 1}`, time: '', t2: '', t3: '', t4: '', t5: '', t6: '' }); renderEditor(); });
             $('editorTableBody').addEventListener('input', (e) => { const inp = e.target.closest('input[data-i]'); if (inp) editorRows[Number(inp.dataset.i)][inp.dataset.f] = inp.value; });
-            $('editorTableBody').addEventListener('click', (e) => { const btn = e.target.closest('button[data-del]'); if (btn) { editorRows.splice(Number(btn.dataset.del), 1); renderEditor(); } });$('classForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                try { await api('/api/classes', { method: 'POST', json: { class_id: $('clsId').value, class_name:$('clsName').value, teacher_name:$('clsTeacher').value } }); const savedId =$('clsId').value.trim().toUpperCase(); e.target.reset(); notify('Đã lưu lớp học.', 'success', 3000); await renderClassesTable(); if (timetableLoaded) loadClasses($('classSelect').value || savedId); } catch (err) { notify(err.message); }
-            });
-            $('classesBody').addEventListener('click', async (e) => {
-                const edit = e.target.closest('button[data-edit-class]'); if (edit) { $('clsId').value = edit.dataset.editClass; $('clsName').value = edit.dataset.name; $('clsTeacher').value = edit.dataset.teacher; $('clsName').focus(); return; }
-                const del = e.target.closest('button[data-del-class]');
-                if (del) { showConfirm('Xóa lớp học', `Xóa lớp ${del.dataset.delClass} cùng thời khóa biểu của lớp?`, async () => { try { await api(`/api/classes/${encodeURIComponent(del.dataset.delClass)}`, { method: 'DELETE' }); await renderClassesTable(); if (timetableLoaded) loadClasses(); } catch (err) { notify(err.message); } }); }
-            });
+            $('editorTableBody').addEventListener('click', (e) => { const btn = e.target.closest('button[data-del]'); if (btn) { editorRows.splice(Number(btn.dataset.del), 1); renderEditor(); } });$('classForm').addEventListener('submit', async (e) => { e.preventDefault(); try { await api('/api/classes', { method: 'POST', json: { class_id: $('clsId').value, class_name:$('clsName').value, teacher_name:$('clsTeacher').value } }); const savedId =$('clsId').value.trim().toUpperCase(); e.target.reset(); notify('Đã lưu lớp học.', 'success', 3000); await renderClassesTable(); if (timetableLoaded) loadClasses($('classSelect').value || savedId); } catch (err) { notify(err.message); } });
+            $('classesBody').addEventListener('click', async (e) => { const edit = e.target.closest('button[data-edit-class]'); if (edit) { $('clsId').value = edit.dataset.editClass; $('clsName').value = edit.dataset.name; $('clsTeacher').value = edit.dataset.teacher; $('clsName').focus(); return; } const del = e.target.closest('button[data-del-class]'); if (del) { showConfirm('Xóa lớp học', `Xóa lớp ${del.dataset.delClass} cùng thời khóa biểu của lớp?`, async () => { try { await api(`/api/classes/${encodeURIComponent(del.dataset.delClass)}`, { method: 'DELETE' }); await renderClassesTable(); if (timetableLoaded) loadClasses(); } catch (err) { notify(err.message); } }); } });
 
             window.addEventListener('userUpdated', (e) => {
                 currentUser = e.detail;
@@ -748,17 +509,19 @@
                 else showPopup('Cập nhật quyền hạn', 'Quyền Sửa/Xóa tài liệu của bạn đã bị thu hồi bởi Quản trị viên. Bạn hiện chỉ có thể đăng mới và xem tài liệu.', 'warning');
                 if (currentCategory) loadLectures(); 
             });
-            
-           // Khởi tạo Icon Giao diện lần đầu
-            $('themeIcon').className = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'fa fa-circle-half-stroke text-warning' : 'fa fa-circle-half-stroke text-dark';
         }
 
         (async function init() {
             currentUser = await requireUser();
             if (!currentUser) return; 
+            
             $('subjectFilter').innerHTML = '<option value="">Tất cả môn học</option>' + optionsHtml(SUBJECTS);
-            $('editSubject').innerHTML = optionsHtml(SUBJECTS);
-            renderUser(); bindEvents(); loadSettings(); loadAlbums(); loadLectures();
+            $('editSubject').innerHTML = '<option value="">Dùng chung (Không chọn)</option>' + optionsHtml(SUBJECTS);
+            $('weekFilter').innerHTML = '<option value="">Tất cả tuần</option>' + generateWeekOptions().replace('<option value="">Dùng chung (Không chọn)</option>', '');
+            
+            $('themeIcon').className = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'fa fa-circle-half-stroke text-warning' : 'fa fa-circle-half-stroke text-dark';
+            
+            loadState(); renderUser(); bindEvents(); loadSettings(); loadAlbums(); loadLectures();
         })();
     </script>
 </body>
